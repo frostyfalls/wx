@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
+#pragma once
+
+namespace Wx
+{
+
+constexpr std::string_view version = @WX_VERSION@;
+
+} // namespace Wx

@@ -1,8 +1,10 @@
 # wx
 
+A rudimentary Weather Star III/Jr simulator.
+
 ## Dependencies
 
-* Meson (build time)
+* Meson (build-time)
 * SDL3
 * SDL3_ttf
 
@@ -15,4 +17,4 @@ ninja -C build
 
 ## Attributions
 
-Fonts: [TWC Classics](https://twcclassics.com/downloads.html)
+* Fonts: [TWC Classics](https://twcclassics.com/downloads.html)

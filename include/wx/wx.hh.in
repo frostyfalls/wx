@@ -2,9 +2,40 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
+#include <string_view>
+
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
 namespace Wx
 {
 
-constexpr std::string_view version = @WX_VERSION@;
+constexpr std::string_view VERSION = @WX_VERSION@;
+
+struct Configuration
+{
+  std::uint32_t width = 800;
+  std::uint32_t height = 600;
+  std::string title = "wx";
+  std::size_t fontSize = 24;
+};
+
+class Application
+{
+public:
+  Application(const Configuration &config);
+  ~Application();
+
+  void Run();
+private:
+  const Configuration &m_Config;
+  bool m_Quit = true;
+
+  SDL_Window *m_Window = nullptr;
+  SDL_Renderer *m_Renderer = nullptr;
+  TTF_Font *m_Font = nullptr;
+};
 
 } // namespace Wx

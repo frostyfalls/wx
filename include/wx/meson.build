@@ -3,3 +3,5 @@ configure_file(
   output: 'wx.hh',
   configuration: configuration,
 )
+
+subdir('assets')

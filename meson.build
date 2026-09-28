@@ -18,7 +18,8 @@ sdl3_dep = dependency('sdl3')
 sdl3_ttf_dep = dependency('sdl3-ttf')
 
 sources = files(
-  'src/wx.cc',
+  'src/main.cc',
+  'src/wx/wx.cc',
 )
 
 subdir('include')

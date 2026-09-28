@@ -12,3 +12,7 @@
 meson setup build
 ninja -C build
 ```
+
+## Attributions
+
+Fonts: [TWC Classics](https://twcclassics.com/downloads.html)

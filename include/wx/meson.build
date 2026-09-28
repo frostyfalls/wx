@@ -1,6 +1,6 @@
 configure_file(
-  input: 'wx.hh.in',
-  output: 'wx.hh',
+  input: 'config.hh.in',
+  output: 'config.hh',
   configuration: configuration,
 )
 

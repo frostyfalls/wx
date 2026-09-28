@@ -11,10 +11,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "wx/config.hh"
+
 namespace Wx
 {
-
-constexpr std::string_view VERSION = @WX_VERSION@;
 
 struct Configuration
 {

@@ -17,36 +17,82 @@ namespace Wx
 Application::Application(const Configuration &config)
   : m_Config(config)
 {
-  SDL_IOStream *fontData = nullptr;
+  if (!Init())
+    return;
 
-  SDL_Init(SDL_INIT_VIDEO);
-  TTF_Init();
+  m_Slides.push_back({ Product::RegionalObservations, 5.0f });
+  m_Slides.push_back({ Product::CurrentConditions, 8.0f });
 
-  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, 0);
-  m_Renderer = SDL_CreateRenderer(m_Window, nullptr);
-  fontData = SDL_IOFromConstMem(star3000_font, sizeof(star3000_font));
-  m_Font = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
-  fontData = SDL_IOFromConstMem(star3000_small_font, sizeof(star3000_small_font));
-  m_SmallFont = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
-
-  SDL_SetRenderVSync(m_Renderer, true);
+  m_Crawls.push_back({ "September Precipitation: 0.5 in", 4.0f, false });
+  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
 
   m_Running = true;
 }
 
+bool Application::Init()
+{
+  SDL_IOStream *fontData = nullptr;
+
+  if (!SDL_Init(SDL_INIT_VIDEO))
+    return false;
+
+  if (!TTF_Init())
+    return false;
+
+  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, 0);
+  if (!m_Window)
+    return false;
+
+  fontData = SDL_IOFromConstMem(star3000_font, sizeof(star3000_font));
+  if (!fontData)
+    return false;
+
+  m_Font = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
+  if (!m_Font)
+    return false;
+
+  fontData = SDL_IOFromConstMem(star3000_small_font, sizeof(star3000_small_font));
+  if (!fontData)
+    return false;
+
+  m_SmallFont = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
+  if (!m_SmallFont)
+    return false;
+
+  m_Renderer = SDL_CreateRenderer(m_Window, nullptr);
+  if (!m_Renderer)
+    return false;
+
+  SDL_SetRenderVSync(m_Renderer, true);
+
+  return true;
+}
+
 Application::~Application()
 {
-  TTF_CloseFont(m_SmallFont);
-  m_SmallFont = nullptr;
+  if (m_SmallFont)
+  {
+    TTF_CloseFont(m_SmallFont);
+    m_SmallFont = nullptr;
+  }
 
-  TTF_CloseFont(m_Font);
-  m_Font = nullptr;
+  if (m_Font)
+  {
+    TTF_CloseFont(m_Font);
+    m_Font = nullptr;
+  }
 
-  SDL_DestroyRenderer(m_Renderer);
-  m_Renderer = nullptr;
+  if (m_Renderer)
+  {
+    SDL_DestroyRenderer(m_Renderer);
+    m_Renderer = nullptr;
+  }
 
-  SDL_DestroyWindow(m_Window);
-  m_Window = nullptr;
+  if (m_Window)
+  {
+    SDL_DestroyWindow(m_Window);
+    m_Window = nullptr;
+  }
 
   TTF_Quit();
   SDL_Quit();
@@ -54,12 +100,6 @@ Application::~Application()
 
 void Application::Run()
 {
-  m_Slides.push_back({ Product::RegionalObservations, 5.0f });
-  m_Slides.push_back({ Product::CurrentConditions, 8.0f });
-
-  m_Crawls.push_back({ "September Precipitation: 0.5 in", 4.0f, false });
-  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
-
   auto lastFrame = std::chrono::system_clock::now();
 
   while (m_Running)

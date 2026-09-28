@@ -78,6 +78,7 @@ public:
   void Run();
 
 private:
+  bool Init();
   void ProcessEvents();
   void Update(float deltaSeconds);
   void Render();

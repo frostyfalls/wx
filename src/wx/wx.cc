@@ -14,9 +14,6 @@
 namespace Wx
 {
 
-SDL_Color s_BackgroundColorNormal{53, 4, 121, 0};
-SDL_Color s_BackgroundColorRegional{50, 50, 50, 0};
-
 Application::Application(const Configuration &config)
   : m_Config(config)
 {
@@ -39,9 +36,6 @@ Application::Application(const Configuration &config)
 
 Application::~Application()
 {
-  SDL_DestroyTexture(m_SlideTexture);
-  m_SlideTexture = nullptr;
-
   TTF_CloseFont(m_SmallFont);
   m_SmallFont = nullptr;
 
@@ -60,66 +54,27 @@ Application::~Application()
 
 void Application::Run()
 {
+  m_Slides.push_back({ Product::RegionalObservations, 5.0f });
+  m_Slides.push_back({ Product::CurrentConditions, 8.0f });
+
+  m_Crawls.push_back({ "September Precipitation: 0.5 in", 4.0f, false });
+  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
+
   auto lastFrame = std::chrono::system_clock::now();
 
-  m_WeatherData.location = "Tampa";
-  m_WeatherData.currentConditions = "Sunny";
-  m_WeatherData.temperature = "81";
-  m_WeatherData.humidity = "50";
-  m_WeatherData.windChill = "30";
-  m_WeatherData.warnings.push_back(R"(
-Don't go outside there's a
-hurricane lol. florida
-
-with love, weather service
-)");
-
-  if (m_WeatherData.hasWarnings())
-    AddSlide({ Product::Warning, 8.0f });
-  AddSlide({ Product::RegionalObservations, 5.0f });
-  AddSlide({ Product::CurrentConditions, 8.0f });
-
-  // AddCrawl({ "Text crap poop", 2.0f, true });
-  // AddCrawl({ "Item number 2", 4.0f, false });
-  // AddCrawl({ "I LOVE TWC", 8.0f, false });
-  // AddCrawl({ "Accurate, dependable forecasts - The Weather Channel", 9.0f, true });
-  AddCrawl({ "September Precipitation: 0.5 in", 4.0f, false });
-  AddCrawl({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
-
-  m_Scrolling = true;
-
-  m_CurrentSlide = 0;
-  m_CurrentProduct = m_Slides[m_CurrentSlide].product;
-  m_SlideDuration = m_Slides[m_CurrentSlide].durationSeconds;
-
-  m_CurrentCrawl = 0;
-  m_CrawlDuration = m_Crawls[m_CurrentCrawl].durationSeconds;
-  m_Scrolling = m_Crawls[m_CurrentCrawl].scroll;
-  m_ScrollOffset = 0.0f;
-  m_CrawlText = m_Crawls[m_CurrentCrawl].text;
   while (m_Running)
   {
     const auto now = std::chrono::system_clock::now();
-    const auto nowLocal = std::chrono::round<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
     float deltaSeconds = std::chrono::duration<float>(now - lastFrame).count();
-    m_CurrentDateFmt = std::format("{:%a %b %d}", nowLocal);
-    m_CurrentTimeFmt = std::format("{:%H:%M:%S %p}", nowLocal);
-    lastFrame = now;
+
+    m_RenderTime = std::chrono::round<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
 
     ProcessEvents();
     Update(deltaSeconds);
     Render();
+
+    lastFrame = now;
   }
-}
-
-void Application::AddSlide(const Slide &slide)
-{
-  m_Slides.push_back(slide);
-}
-
-void Application::AddCrawl(const Crawl &crawl)
-{
-  m_Crawls.push_back(crawl);
 }
 
 void Application::ProcessEvents()
@@ -134,20 +89,21 @@ void Application::ProcessEvents()
 
 void Application::Update(float deltaSeconds)
 {
-  m_ElapsedSeconds += deltaSeconds;
-  m_ElapsedSecondsCrawl += deltaSeconds;
-  if (m_ElapsedSeconds >= m_SlideDuration)
+  m_SlideTimer += deltaSeconds;
+  if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
   {
-    m_ElapsedSeconds = 0;
+    m_SlideTimer = 0;
     AdvanceSlide();
   }
-  if (m_ElapsedSecondsCrawl >= m_CrawlDuration)
+
+  m_CrawlTimer += deltaSeconds;
+  if (m_CrawlTimer >= m_Crawls[m_CurrentCrawl].durationSeconds)
   {
-    m_ElapsedSecondsCrawl = 0;
+    m_CrawlTimer = 0;
     AdvanceCrawl();
   }
-  if (m_Scrolling)
-    m_ScrollOffset += 2.0f;
+  if (m_Crawls[m_CurrentCrawl].scroll)
+    m_CrawlScroll += 2.0f;
 }
 
 void Application::AdvanceSlide()
@@ -157,8 +113,7 @@ void Application::AdvanceSlide()
   else
     m_CurrentSlide += 1;
 
-  m_CurrentProduct = m_Slides[m_CurrentSlide].product;
-  m_SlideDuration = m_Slides[m_CurrentSlide].durationSeconds;
+  // m_SlideScroll = 0.0f;
 }
 
 void Application::AdvanceCrawl()
@@ -168,31 +123,26 @@ void Application::AdvanceCrawl()
   else
     m_CurrentCrawl += 1;
 
-  m_Scrolling = m_Crawls[m_CurrentCrawl].scroll;
-  m_CrawlDuration = m_Crawls[m_CurrentCrawl].durationSeconds;
-  m_ScrollOffset = 0.0f;
-  m_CrawlText = m_Crawls[m_CurrentCrawl].text;
+  m_CrawlScroll = 0.0f;
 }
 
 void Application::Render()
 {
   std::int32_t windowWidth, windowHeight;
-
   SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
-  SDL_Rect slideClip{40, 20, windowWidth - 80, windowHeight - 40};
+  SDL_Rect clipRect{40, 20, windowWidth - 80, windowHeight - 40};
   SDL_FRect lineRect{0, static_cast<float>(windowHeight - 100), static_cast<float>(windowWidth), 2};
 
   SDL_SetRenderDrawColor(m_Renderer, m_BackgroundColor.r, m_BackgroundColor.g, m_BackgroundColor.b, m_BackgroundColor.a);
   SDL_RenderClear(m_Renderer);
-
   SDL_SetRenderDrawColor(m_Renderer, m_TextColor.r, m_TextColor.g, m_TextColor.b, m_TextColor.a);
   SDL_RenderRect(m_Renderer, &lineRect);
 
-  SDL_SetRenderClipRect(m_Renderer, &slideClip);
+  SDL_SetRenderClipRect(m_Renderer, &clipRect);
 
   {
     std::string message;
-    switch (m_CurrentProduct)
+    switch (m_Slides[m_CurrentSlide].product)
     {
     case Product::CurrentConditions:
       message = "Current Conditions";
@@ -204,11 +154,12 @@ void Application::Render()
       message = "Warning";
       break;
     }
-    RenderTextAt(message, TextType::Small, windowWidth / 2, slideClip.y, TextAlignment::Center);
+    RenderTextAt(message, TextType::Small, windowWidth / 2, clipRect.y, TextAlignment::Center);
   }
+
   {
     std::string message;
-    switch (m_CurrentProduct)
+    switch (m_Slides[m_CurrentSlide].product)
     {
     case Product::CurrentConditions:
       message = R"(
@@ -227,16 +178,16 @@ September Precipitation: 0.5 in
       message = m_WeatherData.warnings[0];
       break;
     }
-    RenderTextAt(message, TextType::Normal, slideClip.x, slideClip.y + 30, TextAlignment::Left);
+    RenderTextAt(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
   }
 
-  RenderTextAt(m_CurrentDateFmt, TextType::Small, slideClip.x, lineRect.y + 3, TextAlignment::Left);
-  RenderTextAt(m_CurrentTimeFmt, TextType::Small, slideClip.w, lineRect.y + 3, TextAlignment::Right);
+  RenderTextAt(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
+  RenderTextAt(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.w, lineRect.y + 3, TextAlignment::Right);
   {
-    float x = slideClip.x;
-    if (m_Scrolling)
-      x = windowWidth - m_ScrollOffset;
-    RenderTextAt(m_CrawlText, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
+    float x = clipRect.x;
+    if (m_Crawls[m_CurrentCrawl].scroll)
+      x = windowWidth - m_CrawlScroll;
+    RenderTextAt(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);

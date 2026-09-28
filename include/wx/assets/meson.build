@@ -5,6 +5,7 @@ bin2h = files(tools_dir / 'bin2h.py')
 
 foreach font : [
   assets_dir / 'star3000.ttf',
+  assets_dir / 'star3000_small.ttf',
   assets_dir / 'starjr.ttf',
 ]
   sources += custom_target(

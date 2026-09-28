@@ -5,11 +5,11 @@
 #include <print>
 #include <string>
 
-#include "wx/Application.hh"
+#include "Wx/Application.hh"
 
-#include "wx/assets/star3000.hh"
-#include "wx/assets/star3000_small.hh"
-#include "wx/assets/starjr.hh"
+#include "Wx/Assets/Star3000.hh"
+#include "Wx/Assets/Star3000_Small.hh"
+#include "Wx/Assets/StarJr.hh"
 
 namespace Wx
 {
@@ -43,7 +43,7 @@ bool Application::Init()
   if (!m_Window)
     return false;
 
-  fontData = SDL_IOFromConstMem(star3000_font, sizeof(star3000_font));
+  fontData = SDL_IOFromConstMem(g_Star3000, sizeof(g_Star3000));
   if (!fontData)
     return false;
 
@@ -51,7 +51,7 @@ bool Application::Init()
   if (!m_Font)
     return false;
 
-  fontData = SDL_IOFromConstMem(star3000_small_font, sizeof(star3000_small_font));
+  fontData = SDL_IOFromConstMem(g_Star3000_Small, sizeof(g_Star3000_Small));
   if (!fontData)
     return false;
 

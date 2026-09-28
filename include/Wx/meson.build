@@ -4,4 +4,4 @@ configure_file(
   configuration: configuration,
 )
 
-subdir('assets')
+subdir('Assets')

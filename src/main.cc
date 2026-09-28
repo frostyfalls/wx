@@ -2,7 +2,7 @@
 
 #include <print>
 
-#include "wx/Application.hh"
+#include "Wx/Application.hh"
 
 int main()
 {

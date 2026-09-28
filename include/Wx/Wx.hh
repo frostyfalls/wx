@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "wx/config.hh"
+#include "Wx/config.hh"
 
 namespace Wx
 {

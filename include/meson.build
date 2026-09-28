@@ -1,1 +1,1 @@
-subdir('wx')
+subdir('Wx')

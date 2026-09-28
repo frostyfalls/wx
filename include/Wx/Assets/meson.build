@@ -4,9 +4,9 @@ tools_dir = meson.project_source_root() / 'tools'
 bin2h = files(tools_dir / 'bin2h.py')
 
 foreach font : [
-  assets_dir / 'star3000.ttf',
-  assets_dir / 'star3000_small.ttf',
-  assets_dir / 'starjr.ttf',
+  assets_dir / 'Star3000.ttf',
+  assets_dir / 'Star3000_Small.ttf',
+  assets_dir / 'StarJr.ttf',
 ]
   sources += custom_target(
     font.split('/')[-1],
@@ -16,7 +16,7 @@ foreach font : [
       bin2h,
       '@INPUT@',
       '@OUTPUT@',
-      '@BASENAME@_font',
+      'g_@BASENAME@',
     ],
   )
 endforeach

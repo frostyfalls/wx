@@ -1,6 +1,6 @@
 configure_file(
-  input: 'config.hh.in',
-  output: 'config.hh',
+  input: 'Config.hh.in',
+  output: 'Config.hh',
   configuration: configuration,
 )
 

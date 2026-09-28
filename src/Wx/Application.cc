@@ -135,38 +135,27 @@ void Application::Update(float deltaSeconds)
   m_SlideTimer += deltaSeconds;
   if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
   {
+    Advance(m_Slides, m_CurrentSlide);
     m_SlideTimer = 0;
-    AdvanceSlide();
   }
 
   m_CrawlTimer += deltaSeconds;
   if (m_CrawlTimer >= m_Crawls[m_CurrentCrawl].durationSeconds)
   {
+    Advance(m_Crawls, m_CurrentCrawl);
     m_CrawlTimer = 0;
-    AdvanceCrawl();
+    m_CrawlScroll = 0.0f;
   }
   if (m_Crawls[m_CurrentCrawl].scroll)
     m_CrawlScroll += 2.0f;
 }
 
-void Application::AdvanceSlide()
+template <typename T>
+void Application::Advance(std::vector<T> &what, std::size_t &index)
 {
-  if (m_CurrentSlide == m_Slides.size() - 1)
-    m_CurrentSlide = 0;
-  else
-    m_CurrentSlide += 1;
-
-  // m_SlideScroll = 0.0f;
-}
-
-void Application::AdvanceCrawl()
-{
-  if (m_CurrentCrawl == m_Crawls.size() - 1)
-    m_CurrentCrawl = 0;
-  else
-    m_CurrentCrawl += 1;
-
-  m_CrawlScroll = 0.0f;
+  if (what.empty())
+    return;
+  index = (index + 1) % what.size();
 }
 
 void Application::Render()

@@ -27,8 +27,8 @@ private:
   void ProcessEvents();
   void Update(float deltaSeconds);
   void Render();
-  void AdvanceSlide();
-  void AdvanceCrawl();
+  template <typename T>
+  void Advance(std::vector<T> &what, std::size_t &index);
   void RenderText(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
 
 private:
@@ -45,7 +45,6 @@ private:
   std::vector<Slide> m_Slides;
   std::size_t m_CurrentSlide = 0;
   float m_SlideTimer = 0.0f;
-  // float m_SlideScroll = 0.0f;
 
   std::vector<Crawl> m_Crawls;
   std::size_t m_CurrentCrawl = 0;

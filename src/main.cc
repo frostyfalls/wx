@@ -2,7 +2,7 @@
 
 #include <print>
 
-#include "wx/wx.hh"
+#include "wx/Application.hh"
 
 int main()
 {
@@ -10,6 +10,7 @@ int main()
 
   Wx::Configuration config;
   config.fontSize = 32;
+
   Wx::Application app(config);
   app.Run();
 }

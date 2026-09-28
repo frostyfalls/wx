@@ -5,7 +5,7 @@
 #include <print>
 #include <string>
 
-#include "wx/wx.hh"
+#include "wx/Application.hh"
 
 #include "wx/assets/star3000.hh"
 #include "wx/assets/star3000_small.hh"

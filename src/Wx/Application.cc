@@ -122,8 +122,11 @@ void Application::ProcessEvents()
   SDL_Event e;
   while (SDL_PollEvent(&e))
   {
-    if (e.type == SDL_EVENT_QUIT)
+    if ((e.type == SDL_EVENT_QUIT) || (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE))
+    {
       m_Running = false;
+      break;
+    }
   }
 }
 

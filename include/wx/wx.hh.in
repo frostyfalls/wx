@@ -3,8 +3,10 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -22,6 +24,28 @@ struct Configuration
   std::size_t fontSize = 24;
 };
 
+enum class Product
+{
+  CurrentConditions,
+  RegionalObservations,
+  Warning,
+};
+
+struct WeatherData
+{
+  std::string location;
+  std::string currentConditions;
+  std::vector<std::string> warnings{};
+
+  bool hasWarnings() const { return !warnings.empty(); }
+};
+
+struct Slide
+{
+  Product product;
+  float durationSeconds;
+};
+
 class Application
 {
 public:
@@ -29,13 +53,40 @@ public:
   ~Application();
 
   void Run();
+
+private:
+  void ProcessEvents();
+  void Update(float deltaSeconds);
+  void Render();
+  void AdvanceSlide();
+
+  SDL_Texture *RasterizeText(const std::string &text);
+
 private:
   const Configuration &m_Config;
-  bool m_Quit = true;
+  bool m_Running = false;
+
+  std::vector<Slide> m_Slides = {
+    { Product::CurrentConditions, 8.0f },
+    { Product::RegionalObservations, 12.0f },
+  };
+  float m_ElapsedSeconds = 0.0f;
+  std::size_t m_CurrentSlide = 0;
+  Product m_CurrentProduct = m_Slides[m_CurrentSlide].product;
+  float m_SlideDuration = m_Slides[m_CurrentSlide].durationSeconds;
+  bool m_Scrolling = false;
+  float m_ScrollOffset = 0.0f;
+
+  SDL_Color m_BackgroundColor{53, 4, 121, 0};
+  SDL_Color m_TextColor{238, 238, 238, 0};
 
   SDL_Window *m_Window = nullptr;
   SDL_Renderer *m_Renderer = nullptr;
   TTF_Font *m_Font = nullptr;
+
+  SDL_Texture *m_SlideTexture = nullptr;
+  SDL_FRect m_SlideRect{0, 0, 0, 0};
+  WeatherData m_WeatherData;
 };
 
 } // namespace Wx

@@ -17,20 +17,9 @@ configuration.set_quoted('WX_VERSION', meson.project_version())
 sdl3_dep = dependency('sdl3')
 sdl3_ttf_dep = dependency('sdl3-ttf')
 
-sources = files(
-  'src/main.cc',
-  'src/wx/wx.cc',
-)
+sources = []
+dependencies = [sdl3_dep, sdl3_ttf_dep]
+include = include_directories('include')
 
 subdir('include')
-
-executable(
-  'wx',
-  sources,
-  include_directories: 'include',
-  dependencies: [
-    sdl3_dep,
-    sdl3_ttf_dep,
-  ],
-  install: true,
-)
+subdir('src')

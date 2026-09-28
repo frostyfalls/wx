@@ -154,7 +154,7 @@ void Application::Render()
       message = "Warning";
       break;
     }
-    RenderTextAt(message, TextType::Small, windowWidth / 2, clipRect.y, TextAlignment::Center);
+    RenderText(message, TextType::Small, windowWidth / 2, clipRect.y, TextAlignment::Center);
   }
 
   {
@@ -178,16 +178,16 @@ September Precipitation: 0.5 in
       message = m_WeatherData.warnings[0];
       break;
     }
-    RenderTextAt(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
+    RenderText(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
   }
 
-  RenderTextAt(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
-  RenderTextAt(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.w, lineRect.y + 3, TextAlignment::Right);
+  RenderText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
+  RenderText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.w, lineRect.y + 3, TextAlignment::Right);
   {
     float x = clipRect.x;
     if (m_Crawls[m_CurrentCrawl].scroll)
       x = windowWidth - m_CrawlScroll;
-    RenderTextAt(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
+    RenderText(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);
@@ -195,9 +195,13 @@ September Precipitation: 0.5 in
   SDL_RenderPresent(m_Renderer);
 }
 
-SDL_Texture *Application::RasterizeText(const std::string &text, TextType type)
+void Application::RenderText(const std::string &text, TextType type, float x, float y, TextAlignment alignment)
 {
-  TTF_Font *font;
+  TTF_Font *font = nullptr;
+  SDL_Surface *surface = nullptr;
+  SDL_Texture *texture = nullptr;
+  SDL_FRect rect{x, y, 0, 0};
+
   switch (type)
   {
   case TextType::Normal:
@@ -207,36 +211,26 @@ SDL_Texture *Application::RasterizeText(const std::string &text, TextType type)
     font = m_SmallFont;
     break;
   }
-  SDL_Surface *surface = nullptr;
-  SDL_Texture *texture = nullptr;
 
   surface = TTF_RenderText_Solid_Wrapped(font, text.c_str(), 0, m_TextColor, 0);
   texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
 
+  rect.w = surface->w;
+  rect.h = surface->h;
   SDL_DestroySurface(surface);
-  return texture;
-}
-
-void Application::RenderTextAt(const std::string &text, TextType type, float x, float y, TextAlignment alignment)
-{
-  SDL_Texture *texture = RasterizeText(text, type);
-
-  float width, height;
-  SDL_GetTextureSize(texture, &width, &height);
 
   switch (alignment)
   {
   case TextAlignment::Left:
     break;
   case TextAlignment::Center:
-    x -= width / 2.0f;
+    rect.x -= rect.w / 2.0f;
     break;
   case TextAlignment::Right:
-    x -= width;
+    rect.x -= rect.w;
     break;
   }
 
-  SDL_FRect rect{x, y, width, height};
   SDL_RenderTexture(m_Renderer, texture, nullptr, &rect);
   SDL_DestroyTexture(texture);
 }

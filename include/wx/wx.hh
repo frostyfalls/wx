@@ -83,9 +83,7 @@ private:
   void Render();
   void AdvanceSlide();
   void AdvanceCrawl();
-
-  SDL_Texture *RasterizeText(const std::string &text, TextType type);
-  void RenderTextAt(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
+  void RenderText(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
 
 private:
   const Configuration &m_Config;

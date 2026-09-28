@@ -39,7 +39,7 @@ bool Application::Init()
   if (!TTF_Init())
     return false;
 
-  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, 0);
+  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, SDL_WINDOW_RESIZABLE);
   if (!m_Window)
     return false;
 
@@ -123,9 +123,12 @@ void Application::ProcessEvents()
   while (SDL_PollEvent(&e))
   {
     if ((e.type == SDL_EVENT_QUIT) || (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE))
-    {
       m_Running = false;
-      break;
+    else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
+    {
+      m_Width = e.window.data1;
+      m_Height = e.window.data2;
+      SDL_RenderPresent(m_Renderer);
     }
   }
 }
@@ -155,20 +158,17 @@ void Application::Advance(std::vector<T> &what, std::size_t &index)
 {
   if (what.empty())
     return;
+
   index = (index + 1) % what.size();
 }
 
 void Application::Render()
 {
-  std::int32_t windowWidth, windowHeight;
-  SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
-  SDL_Rect clipRect{40, 20, windowWidth - 80, windowHeight - 40};
-  SDL_FRect lineRect{0, static_cast<float>(windowHeight - 100), static_cast<float>(windowWidth), 2};
+  SDL_Rect clipRect{40, 20, static_cast<int>(m_Width - 80), static_cast<int>(m_Height - 40)};
+  SDL_FRect lineRect{0, static_cast<float>(m_Height - 100), static_cast<float>(m_Width), 2};
 
-  SDL_SetRenderDrawColor(m_Renderer, m_BackgroundColor.r, m_BackgroundColor.g, m_BackgroundColor.b, m_BackgroundColor.a);
-  SDL_RenderClear(m_Renderer);
-  SDL_SetRenderDrawColor(m_Renderer, m_TextColor.r, m_TextColor.g, m_TextColor.b, m_TextColor.a);
-  SDL_RenderRect(m_Renderer, &lineRect);
+  Clear(m_BackgroundColor);
+  DrawRect(lineRect, m_TextColor);
 
   SDL_SetRenderClipRect(m_Renderer, &clipRect);
 
@@ -186,7 +186,7 @@ void Application::Render()
       message = "Warning";
       break;
     }
-    RenderText(message, TextType::Small, windowWidth / 2, clipRect.y, TextAlignment::Center);
+    DrawText(message, TextType::Small, m_Width / 2, clipRect.y, TextAlignment::Center);
   }
 
   {
@@ -210,16 +210,16 @@ September Precipitation: 0.5 in
       message = m_WeatherData.warnings[0];
       break;
     }
-    RenderText(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
+    DrawText(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
   }
 
-  RenderText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
-  RenderText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.w, lineRect.y + 3, TextAlignment::Right);
+  DrawText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
+  DrawText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.x + clipRect.w, lineRect.y + 3, TextAlignment::Right);
   {
     float x = clipRect.x;
     if (m_Crawls[m_CurrentCrawl].scroll)
-      x = windowWidth - m_CrawlScroll;
-    RenderText(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
+      x = m_Width - m_CrawlScroll;
+    DrawText(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);
@@ -227,7 +227,19 @@ September Precipitation: 0.5 in
   SDL_RenderPresent(m_Renderer);
 }
 
-void Application::RenderText(const std::string &text, TextType type, float x, float y, TextAlignment alignment)
+void Application::Clear(SDL_Color color)
+{
+  SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderClear(m_Renderer);
+}
+
+void Application::DrawRect(SDL_FRect rect, SDL_Color color)
+{
+  SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderRect(m_Renderer, &rect);
+}
+
+void Application::DrawText(const std::string &text, TextType type, float x, float y, TextAlignment alignment)
 {
   TTF_Font *font = nullptr;
   SDL_Surface *surface = nullptr;

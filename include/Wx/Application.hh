@@ -27,13 +27,18 @@ private:
   void ProcessEvents();
   void Update(float deltaSeconds);
   void Render();
+
   template <typename T>
   void Advance(std::vector<T> &what, std::size_t &index);
-  void RenderText(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
+
+  void Clear(SDL_Color color);
+  void DrawRect(SDL_FRect rect, SDL_Color color);
+  void DrawText(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
 
 private:
   const Configuration &m_Config;
   bool m_Running = false;
+  std::size_t m_Width, m_Height;
 
   WeatherData m_WeatherData;
 

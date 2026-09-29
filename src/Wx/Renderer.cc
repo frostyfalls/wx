@@ -29,8 +29,6 @@ Renderer::Renderer(const Configuration &config)
   m_Renderer = SDL_CreateRenderer(m_Window, nullptr);
 
   SDL_SetRenderVSync(m_Renderer, true);
-
-  TTF_GetStringSize(m_SmallFont, "Mon", 0, nullptr, &m_DateTimeHeight);
 }
 
 Renderer::~Renderer()
@@ -113,9 +111,21 @@ void Renderer::DrawRect(Rect rect, Color color)
 {
   std::println("DrawRect();");
 
-  SDL_FRect r{rect.x, rect.y, rect.width, rect.height};
   SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderFillRect(m_Renderer, &r);
+  if (rect.width == 0 || rect.height == 0)
+  {
+    SDL_RenderFillRect(m_Renderer, nullptr);
+  }
+  else
+  {
+    SDL_FRect r{
+      static_cast<float>(rect.x),
+      static_cast<float>(rect.y),
+      static_cast<float>(rect.width),
+      static_cast<float>(rect.height),
+    };
+    SDL_RenderFillRect(m_Renderer, &r);
+  }
 }
 
 Asset Renderer::RasterizeText(const std::string &text, TextType type, Color color)
@@ -149,9 +159,11 @@ Asset Renderer::RasterizeText(const std::string &text, TextType type, Color colo
   return asset;
 }
 
-void Renderer::DrawAsset(Asset asset, float x, float y, TextAlignment alignment)
+void Renderer::DrawAsset(AssetId id, float x, float y, TextAlignment alignment)
 {
   std::println("DrawAsset();");
+
+  Asset asset = m_Assets[id];
 
   SDL_FRect rect{x, y, static_cast<float>(asset.width), static_cast<float>(asset.height)};
 
@@ -168,6 +180,17 @@ void Renderer::DrawAsset(Asset asset, float x, float y, TextAlignment alignment)
   }
 
   SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
+}
+
+void Renderer::SetViewport(const Rect &rect)
+{
+  SDL_Rect r{rect.x, rect.y, rect.width, rect.height};
+  SDL_SetRenderViewport(m_Renderer, &r);
+}
+
+void Renderer::ClearViewport()
+{
+  SDL_SetRenderViewport(m_Renderer, nullptr);
 }
 
 } // namespace Wx

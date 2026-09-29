@@ -55,26 +55,29 @@ public:
   Renderer(const Configuration &config);
   ~Renderer();
 
-  Asset &GetAsset(AssetId id) { return m_Assets[id]; }
-  void SetAsset(AssetId id, Asset asset) { m_Assets[id] = asset; }
-  Rect MeasureText(const std::string &text, TextType type);
-
   void Present();
-  void SetFullscreen(bool enabled);
 
   void Clear(Color color);
   void DrawRect(Rect rect, Color color);
 
+  Rect MeasureText(const std::string &text, TextType type);
   Asset RasterizeText(const std::string &text, TextType type, Color color);
-  void DrawAsset(Asset asset, float x, float y, TextAlignment alignment);
 
-  std::size_t Width() const { return m_Width; }
-  std::size_t Height() const { return m_Height; }
+  Asset &GetAsset(AssetId id) { return m_Assets[id]; }
+  void SetAsset(AssetId id, Asset asset) { m_Assets[id] = asset; }
+  void DrawAsset(AssetId, float x, float y, TextAlignment alignment);
+
+  void SetViewport(const Rect &rect);
+  void ClearViewport();
+
+  std::int32_t Width() const { return m_Width; }
+  std::int32_t Height() const { return m_Height; }
   void Resize(std::size_t width, std::size_t height) { m_Width = width, m_Height = height; }
+  void SetFullscreen(bool enabled);
 
 private:
   Configuration m_Config;
-  std::size_t m_Width = 0, m_Height = 0;
+  std::int32_t m_Width = 0, m_Height = 0;
   std::map<AssetId, Asset> m_Assets;
   std::size_t m_FontSize = 32;
 
@@ -82,8 +85,6 @@ private:
   SDL_Renderer *m_Renderer = nullptr;
   TTF_Font *m_Font = nullptr;
   TTF_Font *m_SmallFont = nullptr;
-
-  std::int32_t m_DateTimeHeight = 0;
 };
 
 } // namespace Wx

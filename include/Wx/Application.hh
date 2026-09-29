@@ -63,8 +63,6 @@ private:
 
   Color m_BackgroundColor{53, 4, 121, 0};
   Color m_TextColor{238, 238, 238, 0};
-  Rect m_ClipRect{40, 20, 0, 0};
-  Rect m_LineRect{0, 0, 0, 2};
 };
 
 } // namespace Wx

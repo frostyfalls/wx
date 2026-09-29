@@ -20,16 +20,16 @@ Application::Application(const Configuration &config)
 {
   Init();
 
-  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
-  m_Crawls.push_back({ "Conditions at Tampa Bay", CrawlMode::Static });
-  m_Crawls.push_back({ "Mostly Cloudy", CrawlMode::Static });
-  m_Crawls.push_back({ "Temperature: 59°F", CrawlMode::Static });
-  m_Crawls.push_back({ "September Precipitation: 0.5 in.", CrawlMode::Static });
-  m_Crawls.push_back({ "Humidity: 50%  Dewpoint: 40°F", CrawlMode::Static });
-  m_Crawls.push_back({ "Barometric Pressure: 30.02 in.", CrawlMode::Static });
-  m_Crawls.push_back({ "Wind: SSE 9 mph", CrawlMode::Static });
-  m_Crawls.push_back({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
-  m_Crawls.push_back({ "September precipitation: 4.94 in.", CrawlMode::Static });
+  AddCrawl({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
+  AddCrawl({ "Conditions at Tampa Bay", CrawlMode::Static });
+  AddCrawl({ "Mostly Cloudy", CrawlMode::Static });
+  AddCrawl({ "Temperature: 59°F", CrawlMode::Static });
+  AddCrawl({ "September Precipitation: 0.5 in.", CrawlMode::Static });
+  AddCrawl({ "Humidity: 50%  Dewpoint: 40°F", CrawlMode::Static });
+  AddCrawl({ "Barometric Pressure: 30.02 in.", CrawlMode::Static });
+  AddCrawl({ "Wind: SSE 9 mph", CrawlMode::Static });
+  AddCrawl({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
+  AddCrawl({ "September precipitation: 4.94 in.", CrawlMode::Static });
 
   m_Running = true;
 
@@ -145,6 +145,14 @@ void Application::ProcessEvents()
       SDL_RenderPresent(m_Renderer);
     }
   }
+}
+
+void Application::AddCrawl(const Crawl &crawl)
+{
+  bool empty = m_Crawls.empty();
+  m_Crawls.push_back(crawl);
+  if (empty)
+    AdvanceCrawl();
 }
 
 void Application::AdvanceCrawl()

@@ -35,6 +35,7 @@ private:
 
   void AdvanceCrawl();
   Crawl& CurrentCrawl() { return m_Crawls.at(m_CurrentCrawl); }
+  void AddCrawl(const Crawl &crawl);
 
 private:
   const Configuration &m_Config;

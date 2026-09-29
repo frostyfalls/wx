@@ -19,6 +19,12 @@ struct Configuration
   std::size_t fontSize = 24;
 };
 
+enum class State
+{
+  Running,
+  Menu,
+};
+
 enum class Product
 {
   CurrentConditions,
@@ -61,11 +67,16 @@ struct Slide
   const std::string text;
 };
 
+enum class CrawlMode
+{
+  Static,
+  Scrolling,
+};
+
 struct Crawl
 {
   std::string text;
-  float durationSeconds;
-  bool scroll;
+  CrawlMode mode;
 };
 
 } // namespace Wx

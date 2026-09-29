@@ -20,8 +20,16 @@ Application::Application(const Configuration &config)
 {
   Init();
 
-  m_Crawls.push_back({ "September Precipitation: 0.5 in", 4.0f, false });
-  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
+  m_Crawls.push_back({ "Conditions at Tampa Bay", CrawlMode::Static });
+  m_Crawls.push_back({ "Mostly Cloudy", CrawlMode::Static });
+  m_Crawls.push_back({ "Temperature: 59°F", CrawlMode::Static });
+  m_Crawls.push_back({ "September Precipitation: 0.5 in.", CrawlMode::Static });
+  m_Crawls.push_back({ "Humidity: 50%%  Dewpoint: 40°F", CrawlMode::Static });
+  m_Crawls.push_back({ "Barometric Pressure: 30.02 in.", CrawlMode::Static });
+  m_Crawls.push_back({ "Wind: SSE 9 mph", CrawlMode::Static });
+  m_Crawls.push_back({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
+  m_Crawls.push_back({ "September precipitation: 4.94 in.", CrawlMode::Static });
+  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
 
   m_Running = true;
 }
@@ -109,7 +117,15 @@ void Application::Run()
     Update(deltaSeconds);
 
     ProcessEvents();
-    Render();
+    switch (m_State)
+    {
+    case State::Running:
+      Render();
+      break;
+    case State::Menu:
+      RenderMenu();
+      break;
+    }
   }
 }
 
@@ -122,6 +138,19 @@ void Application::ProcessEvents()
       m_Running = false;
     else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_C)
       m_ShowDateTime = !m_ShowDateTime;
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_E)
+    {
+      if (m_State == State::Running)
+      {
+        m_State = State::Menu;
+        m_CurrentSlide = 0;
+        m_CurrentCrawl = 0;
+        m_SlideTimer = 0.0f;
+        m_CrawlTimer = 0.0f;
+      }
+      else
+        m_State = State::Running;
+    }
     else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
     {
       m_Width = e.window.data1;
@@ -137,27 +166,40 @@ void Application::ProcessEvents()
 
 void Application::Update(float deltaSeconds)
 {
-  if (!m_Slides.empty())
+  if (m_State == State::Running)
   {
-    m_SlideTimer += deltaSeconds;
-    if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
+    if (!m_Slides.empty())
     {
-      m_CurrentSlide = (m_CurrentSlide + 1) % m_Slides.size();
-      m_SlideTimer = 0;
+      m_SlideTimer += deltaSeconds;
+      if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
+      {
+        m_CurrentSlide = (m_CurrentSlide + 1) % m_Slides.size();
+        m_SlideTimer = 0;
+      }
     }
-  }
 
-  if (!m_Crawls.empty())
-  {
-    m_CrawlTimer += deltaSeconds;
-    if (m_CrawlTimer >= m_Crawls[m_CurrentCrawl].durationSeconds)
+    if (!m_Crawls.empty())
     {
-      m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
-      m_CrawlTimer = 0;
-      m_CrawlScroll = 0.0f;
+      m_CrawlTimer += deltaSeconds;
+      if (m_Crawls[m_CurrentCrawl].mode == CrawlMode::Static && m_CrawlTimer >= 5)
+      {
+        m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
+        m_CrawlTimer = 0;
+        m_CrawlScroll = 0.0f;
+      }
+      else if (m_Crawls[m_CurrentCrawl].mode == CrawlMode::Scrolling)
+      {
+        std::int32_t textWidth;
+        TTF_GetStringSize(m_Font, m_Crawls[m_CurrentCrawl].text.c_str(), 0, &textWidth, nullptr);
+        if (m_Width - m_CrawlScroll + textWidth < 0)
+        {
+          m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
+          m_CrawlTimer = 0;
+          m_CrawlScroll = 0.0f;
+        }
+        m_CrawlScroll += 2.0f;
+      }
     }
-    if (m_Crawls[m_CurrentCrawl].scroll)
-      m_CrawlScroll += 2.0f;
   }
 }
 
@@ -178,7 +220,7 @@ void Application::Render()
   {
     Crawl crawl = m_Crawls[m_CurrentCrawl];
     float x = m_ClipRect.x;
-    if (crawl.scroll)
+    if (crawl.mode == CrawlMode::Scrolling)
       x = m_Width - m_CrawlScroll;
     float y = m_LineRect.y + 10;
     if (m_ShowDateTime)
@@ -187,6 +229,13 @@ void Application::Render()
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);
+  SDL_RenderPresent(m_Renderer);
+}
+
+void Application::RenderMenu()
+{
+  SDL_Color color{50, 50, 50, 0};
+  Clear(color);
   SDL_RenderPresent(m_Renderer);
 }
 
@@ -238,6 +287,16 @@ void Application::DrawText(const std::string &text, TextType type, float x, floa
     break;
   }
 
+  SDL_SetTextureColorMod(texture, 0, 0, 0);
+  SDL_SetTextureAlphaMod(texture, 128);
+  rect.x += 3;
+  rect.y += 3;
+  SDL_RenderTexture(m_Renderer, texture, nullptr, &rect);
+
+  SDL_SetTextureColorMod(texture, 255, 255, 255);
+  SDL_SetTextureAlphaMod(texture, 255);
+  rect.x -= 3;
+  rect.y -= 3;
   SDL_RenderTexture(m_Renderer, texture, nullptr, &rect);
   SDL_DestroyTexture(texture);
 }

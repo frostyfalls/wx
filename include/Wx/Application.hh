@@ -27,6 +27,7 @@ private:
   void ProcessEvents();
   void Update(float deltaSeconds);
   void Render();
+  void RenderMenu();
 
   void Clear(SDL_Color color);
   void DrawRect(SDL_FRect rect, SDL_Color color);
@@ -53,6 +54,7 @@ private:
   float m_CrawlTimer = 0.0f;
   float m_CrawlScroll = 0.0f;
 
+  State m_State = State::Running;
   std::chrono::local_time<std::chrono::seconds> m_RenderTime;
 
   bool m_ShowDateTime = true;

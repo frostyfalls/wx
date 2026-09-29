@@ -169,8 +169,10 @@ void Application::Render()
 
   if (m_ShowDateTime)
   {
-    DrawText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, m_ClipRect.x, m_LineRect.y + 4, TextAlignment::Left);
-    DrawText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, m_ClipRect.x + m_ClipRect.w, m_LineRect.y + 4, TextAlignment::Right);
+    const std::string date = std::format("{:%a %b %d}", m_RenderTime);
+    const std::string time = std::format("{:%H:%M:%S %p}", m_RenderTime);
+    DrawText(date, TextType::Small, m_ClipRect.x, m_LineRect.y + 4, TextAlignment::Left);
+    DrawText(time, TextType::Small, m_ClipRect.x + m_ClipRect.w, m_LineRect.y + 4, TextAlignment::Right);
   }
   if (!m_Crawls.empty())
   {

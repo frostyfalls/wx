@@ -13,25 +13,8 @@ namespace Wx
 
 struct Configuration
 {
-  std::uint32_t width = 800;
-  std::uint32_t height = 600;
-  std::string title = "wx";
-  std::size_t fontSize = 24;
-};
-
-enum class State
-{
-  Running,
-  Menu,
-};
-
-enum class Product
-{
-  CurrentConditions,
-  RegionalObservations,
-  Warning,
-  Forecast,
-  TravelCities,
+  std::size_t width, height;
+  const std::string title;
 };
 
 enum class TextType
@@ -45,26 +28,6 @@ enum class TextAlignment
   Left,
   Center,
   Right,
-};
-
-struct WeatherData
-{
-  std::string location;
-  std::string currentConditions;
-  std::string temperature;
-  std::string humidity;
-  std::string windChill;
-  std::vector<std::string> warnings{};
-
-  bool hasWarnings() const { return !warnings.empty(); }
-};
-
-struct Slide
-{
-  Product product;
-  float durationSeconds;
-  bool scroll;
-  const std::string text;
 };
 
 enum class CrawlMode

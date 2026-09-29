@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include <print>
-
 #include "Wx/Application.hh"
 
 int main()
 {
-  std::println("wx version {}", Wx::VERSION);
-
-  Wx::Configuration config;
-  config.fontSize = 32;
-
+  Wx::Configuration config{800, 600, "wx"};
   Wx::Application app(config);
   app.Run();
 }

@@ -33,28 +33,28 @@ private:
   void DrawRect(SDL_FRect rect, SDL_Color color);
   void DrawText(const std::string &text, TextType type, float x, float y, TextAlignment alignment);
 
+  void AdvanceCrawl();
+  Crawl& CurrentCrawl() { return m_Crawls.at(m_CurrentCrawl); }
+
 private:
   const Configuration &m_Config;
   bool m_Running = false;
   std::size_t m_Width, m_Height;
-
-  WeatherData m_WeatherData;
 
   SDL_Window *m_Window = nullptr;
   SDL_Renderer *m_Renderer = nullptr;
   TTF_Font *m_Font = nullptr;
   TTF_Font *m_SmallFont = nullptr;
 
-  std::vector<Slide> m_Slides;
-  std::size_t m_CurrentSlide = 0;
-  float m_SlideTimer = 0.0f;
-
   std::vector<Crawl> m_Crawls;
   std::size_t m_CurrentCrawl = 0;
   float m_CrawlTimer = 0.0f;
   float m_CrawlScroll = 0.0f;
+  std::size_t m_FontSize = 32;
 
-  State m_State = State::Running;
+  std::int32_t m_CurrentCrawlWidth = 0;
+  std::int32_t m_DateTimeHeight = 0;
+
   std::chrono::local_time<std::chrono::seconds> m_RenderTime;
 
   bool m_ShowDateTime = true;

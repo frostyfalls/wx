@@ -20,6 +20,7 @@ Application::Application(const Configuration &config)
 {
   Init();
 
+  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
   m_Crawls.push_back({ "Conditions at Tampa Bay", CrawlMode::Static });
   m_Crawls.push_back({ "Mostly Cloudy", CrawlMode::Static });
   m_Crawls.push_back({ "Temperature: 59°F", CrawlMode::Static });
@@ -29,9 +30,10 @@ Application::Application(const Configuration &config)
   m_Crawls.push_back({ "Wind: SSE 9 mph", CrawlMode::Static });
   m_Crawls.push_back({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
   m_Crawls.push_back({ "September precipitation: 4.94 in.", CrawlMode::Static });
-  m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
 
   m_Running = true;
+
+  TTF_GetStringSize(m_SmallFont, "Mon", 0, nullptr, &m_DateTimeHeight);
 }
 
 bool Application::Init()
@@ -52,7 +54,7 @@ bool Application::Init()
   if (!fontData)
     return false;
 
-  m_Font = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
+  m_Font = TTF_OpenFontIO(fontData, true, m_FontSize);
   if (!m_Font)
     return false;
 
@@ -60,7 +62,7 @@ bool Application::Init()
   if (!fontData)
     return false;
 
-  m_SmallFont = TTF_OpenFontIO(fontData, true, m_Config.fontSize);
+  m_SmallFont = TTF_OpenFontIO(fontData, true, m_FontSize);
   if (!m_SmallFont)
     return false;
 
@@ -117,15 +119,7 @@ void Application::Run()
     Update(deltaSeconds);
 
     ProcessEvents();
-    switch (m_State)
-    {
-    case State::Running:
-      Render();
-      break;
-    case State::Menu:
-      RenderMenu();
-      break;
-    }
+    Render();
   }
 }
 
@@ -134,23 +128,12 @@ void Application::ProcessEvents()
   SDL_Event e;
   while (SDL_PollEvent(&e))
   {
-    if ((e.type == SDL_EVENT_QUIT) || (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE))
+    if (e.type == SDL_EVENT_QUIT)
+      m_Running = false;
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)
       m_Running = false;
     else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_C)
       m_ShowDateTime = !m_ShowDateTime;
-    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_E)
-    {
-      if (m_State == State::Running)
-      {
-        m_State = State::Menu;
-        m_CurrentSlide = 0;
-        m_CurrentCrawl = 0;
-        m_SlideTimer = 0.0f;
-        m_CrawlTimer = 0.0f;
-      }
-      else
-        m_State = State::Running;
-    }
     else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
     {
       m_Width = e.window.data1;
@@ -164,41 +147,28 @@ void Application::ProcessEvents()
   }
 }
 
+void Application::AdvanceCrawl()
+{
+  m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
+  m_CrawlTimer = 0;
+  m_CrawlScroll = 0.0f;
+  const Crawl &crawl = CurrentCrawl();
+  TTF_GetStringSize(m_Font, crawl.text.c_str(), 0, &m_CurrentCrawlWidth, nullptr);
+}
+
 void Application::Update(float deltaSeconds)
 {
-  if (m_State == State::Running)
+  if (!m_Crawls.empty())
   {
-    if (!m_Slides.empty())
+    const Crawl &crawl = CurrentCrawl();
+    m_CrawlTimer += deltaSeconds;
+    if (crawl.mode == CrawlMode::Static && m_CrawlTimer >= 5)
+      AdvanceCrawl();
+    else if (crawl.mode == CrawlMode::Scrolling)
     {
-      m_SlideTimer += deltaSeconds;
-      if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
-      {
-        m_CurrentSlide = (m_CurrentSlide + 1) % m_Slides.size();
-        m_SlideTimer = 0;
-      }
-    }
-
-    if (!m_Crawls.empty())
-    {
-      m_CrawlTimer += deltaSeconds;
-      if (m_Crawls[m_CurrentCrawl].mode == CrawlMode::Static && m_CrawlTimer >= 5)
-      {
-        m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
-        m_CrawlTimer = 0;
-        m_CrawlScroll = 0.0f;
-      }
-      else if (m_Crawls[m_CurrentCrawl].mode == CrawlMode::Scrolling)
-      {
-        std::int32_t textWidth;
-        TTF_GetStringSize(m_Font, m_Crawls[m_CurrentCrawl].text.c_str(), 0, &textWidth, nullptr);
-        if (m_Width - m_CrawlScroll + textWidth < 0)
-        {
-          m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
-          m_CrawlTimer = 0;
-          m_CrawlScroll = 0.0f;
-        }
-        m_CrawlScroll += 2.0f;
-      }
+      if (m_Width - m_CrawlScroll + m_CurrentCrawlWidth < 0)
+        AdvanceCrawl();
+      m_CrawlScroll += 2.0f;
     }
   }
 }
@@ -209,8 +179,6 @@ void Application::Render()
   DrawRect(m_LineRect, m_TextColor);
   SDL_SetRenderClipRect(m_Renderer, &m_ClipRect);
 
-  std::int32_t crawlY = 0;
-  TTF_GetStringSize(m_SmallFont, "Mon", 0, nullptr, &crawlY);
   if (m_ShowDateTime)
   {
     const std::string date = std::format("{:%a %b %d}", m_RenderTime);
@@ -220,24 +188,17 @@ void Application::Render()
   }
   if (!m_Crawls.empty())
   {
-    Crawl crawl = m_Crawls[m_CurrentCrawl];
+    const Crawl &crawl = CurrentCrawl();
     float x = m_ClipRect.x;
     if (crawl.mode == CrawlMode::Scrolling)
       x = m_Width - m_CrawlScroll;
     float y = m_LineRect.y + 8;
     if (m_ShowDateTime)
-      y += crawlY;
+      y += m_DateTimeHeight;
     DrawText(crawl.text, TextType::Normal, x, y, TextAlignment::Left);
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);
-  SDL_RenderPresent(m_Renderer);
-}
-
-void Application::RenderMenu()
-{
-  SDL_Color color{50, 50, 50, 0};
-  Clear(color);
   SDL_RenderPresent(m_Renderer);
 }
 

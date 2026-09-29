@@ -24,7 +24,7 @@ Application::Application(const Configuration &config)
   m_Crawls.push_back({ "Mostly Cloudy", CrawlMode::Static });
   m_Crawls.push_back({ "Temperature: 59°F", CrawlMode::Static });
   m_Crawls.push_back({ "September Precipitation: 0.5 in.", CrawlMode::Static });
-  m_Crawls.push_back({ "Humidity: 50%%  Dewpoint: 40°F", CrawlMode::Static });
+  m_Crawls.push_back({ "Humidity: 50%  Dewpoint: 40°F", CrawlMode::Static });
   m_Crawls.push_back({ "Barometric Pressure: 30.02 in.", CrawlMode::Static });
   m_Crawls.push_back({ "Wind: SSE 9 mph", CrawlMode::Static });
   m_Crawls.push_back({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
@@ -209,6 +209,8 @@ void Application::Render()
   DrawRect(m_LineRect, m_TextColor);
   SDL_SetRenderClipRect(m_Renderer, &m_ClipRect);
 
+  std::int32_t crawlY = 0;
+  TTF_GetStringSize(m_SmallFont, "Mon", 0, nullptr, &crawlY);
   if (m_ShowDateTime)
   {
     const std::string date = std::format("{:%a %b %d}", m_RenderTime);
@@ -222,9 +224,9 @@ void Application::Render()
     float x = m_ClipRect.x;
     if (crawl.mode == CrawlMode::Scrolling)
       x = m_Width - m_CrawlScroll;
-    float y = m_LineRect.y + 10;
+    float y = m_LineRect.y + 8;
     if (m_ShowDateTime)
-      y += 14;
+      y += crawlY;
     DrawText(crawl.text, TextType::Normal, x, y, TextAlignment::Left);
   }
 

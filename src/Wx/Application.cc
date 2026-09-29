@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <format>
-#include <optional>
 #include <print>
 #include <string>
 
@@ -21,15 +20,6 @@ Application::Application(const Configuration &config)
   Init();
 
   AddCrawl({ "orcanet: fast, reliable cable internet for the Tampa Bay area", CrawlMode::Scrolling });
-  AddCrawl({ "Conditions at Tampa Bay", CrawlMode::Static });
-  AddCrawl({ "Mostly Cloudy", CrawlMode::Static });
-  AddCrawl({ "Temperature: 59°F", CrawlMode::Static });
-  AddCrawl({ "September Precipitation: 0.5 in.", CrawlMode::Static });
-  AddCrawl({ "Humidity: 50%  Dewpoint: 40°F", CrawlMode::Static });
-  AddCrawl({ "Barometric Pressure: 30.02 in.", CrawlMode::Static });
-  AddCrawl({ "Wind: SSE 9 mph", CrawlMode::Static });
-  AddCrawl({ "Visibility: 9 mi. ceiling unlimited", CrawlMode::Static });
-  AddCrawl({ "September precipitation: 4.94 in.", CrawlMode::Static });
 
   m_Running = true;
 
@@ -125,13 +115,23 @@ void Application::Run()
 
 void Application::ProcessEvents()
 {
+  static bool fullscreen = false;
+
   SDL_Event e;
   while (SDL_PollEvent(&e))
   {
     if (e.type == SDL_EVENT_QUIT)
       m_Running = false;
-    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE)
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_Q)
       m_Running = false;
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_F)
+    {
+      fullscreen = !fullscreen;
+      if (fullscreen)
+        SDL_SetWindowFullscreen(m_Window, SDL_WINDOW_FULLSCREEN);
+      else
+        SDL_SetWindowFullscreen(m_Window, 0);
+    }
     else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_C)
       m_ShowDateTime = !m_ShowDateTime;
     else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
@@ -190,7 +190,7 @@ void Application::Render()
   if (m_ShowDateTime)
   {
     const std::string date = std::format("{:%a %b %d}", m_RenderTime);
-    const std::string time = std::format("{:%H:%M:%S %p}", m_RenderTime);
+    const std::string time = std::format("{:%I:%M:%S %p}", m_RenderTime);
     DrawText(date, TextType::Small, m_ClipRect.x, m_LineRect.y + 4, TextAlignment::Left);
     DrawText(time, TextType::Small, m_ClipRect.x + m_ClipRect.w, m_LineRect.y + 4, TextAlignment::Right);
   }
@@ -219,7 +219,7 @@ void Application::Clear(SDL_Color color)
 void Application::DrawRect(SDL_FRect rect, SDL_Color color)
 {
   SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderRect(m_Renderer, &rect);
+  SDL_RenderFillRect(m_Renderer, &rect);
 }
 
 void Application::DrawText(const std::string &text, TextType type, float x, float y, TextAlignment alignment)

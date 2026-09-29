@@ -4,10 +4,6 @@
 
 int main()
 {
-  using namespace Wx;
-
-  Configuration config{800, 600, "wx"};
-
-  Application app(config);
+  Wx::Application app({800, 600, "wx"});
   app.Run();
 }

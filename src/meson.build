@@ -1,6 +1,7 @@
 sources += [
   'main.cc',
   'Wx/Application.cc',
+  'Wx/Renderer.cc',
 ]
 
 executable(

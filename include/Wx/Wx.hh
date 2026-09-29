@@ -24,6 +24,8 @@ enum class Product
   CurrentConditions,
   RegionalObservations,
   Warning,
+  Forecast,
+  TravelCities,
 };
 
 enum class TextType
@@ -55,6 +57,8 @@ struct Slide
 {
   Product product;
   float durationSeconds;
+  bool scroll;
+  const std::string text;
 };
 
 struct Crawl

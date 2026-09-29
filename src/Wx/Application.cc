@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <format>
+#include <optional>
 #include <print>
 #include <string>
 
@@ -17,11 +18,7 @@ namespace Wx
 Application::Application(const Configuration &config)
   : m_Config(config)
 {
-  if (!Init())
-    return;
-
-  m_Slides.push_back({ Product::RegionalObservations, 5.0f });
-  m_Slides.push_back({ Product::CurrentConditions, 8.0f });
+  Init();
 
   m_Crawls.push_back({ "September Precipitation: 0.5 in", 4.0f, false });
   m_Crawls.push_back({ "orcanet: fast, reliable cable internet for the Tampa Bay area.", 16.0f, true });
@@ -39,7 +36,7 @@ bool Application::Init()
   if (!TTF_Init())
     return false;
 
-  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, SDL_WINDOW_RESIZABLE);
+  m_Window = SDL_CreateWindow(m_Config.title.c_str(), m_Config.width, m_Config.height, 0);
   if (!m_Window)
     return false;
 
@@ -108,12 +105,11 @@ void Application::Run()
     float deltaSeconds = std::chrono::duration<float>(now - lastFrame).count();
 
     m_RenderTime = std::chrono::round<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
+    lastFrame = now;
+    Update(deltaSeconds);
 
     ProcessEvents();
-    Update(deltaSeconds);
     Render();
-
-    lastFrame = now;
   }
 }
 
@@ -124,10 +120,16 @@ void Application::ProcessEvents()
   {
     if ((e.type == SDL_EVENT_QUIT) || (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_ESCAPE))
       m_Running = false;
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_C)
+      m_ShowDateTime = !m_ShowDateTime;
     else if (e.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
     {
       m_Width = e.window.data1;
       m_Height = e.window.data2;
+      m_ClipRect.w = static_cast<int>(m_Width - m_ClipRect.x * 2);
+      m_ClipRect.h = static_cast<int>(m_Height - m_ClipRect.y * 2);
+      m_LineRect.y = static_cast<float>(m_Height - 100);
+      m_LineRect.w = static_cast<float>(m_Width);
       SDL_RenderPresent(m_Renderer);
     }
   }
@@ -135,95 +137,54 @@ void Application::ProcessEvents()
 
 void Application::Update(float deltaSeconds)
 {
-  m_SlideTimer += deltaSeconds;
-  if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
+  if (!m_Slides.empty())
   {
-    Advance(m_Slides, m_CurrentSlide);
-    m_SlideTimer = 0;
+    m_SlideTimer += deltaSeconds;
+    if (m_SlideTimer >= m_Slides[m_CurrentSlide].durationSeconds)
+    {
+      m_CurrentSlide = (m_CurrentSlide + 1) % m_Slides.size();
+      m_SlideTimer = 0;
+    }
   }
 
-  m_CrawlTimer += deltaSeconds;
-  if (m_CrawlTimer >= m_Crawls[m_CurrentCrawl].durationSeconds)
+  if (!m_Crawls.empty())
   {
-    Advance(m_Crawls, m_CurrentCrawl);
-    m_CrawlTimer = 0;
-    m_CrawlScroll = 0.0f;
+    m_CrawlTimer += deltaSeconds;
+    if (m_CrawlTimer >= m_Crawls[m_CurrentCrawl].durationSeconds)
+    {
+      m_CurrentCrawl = (m_CurrentCrawl + 1) % m_Crawls.size();
+      m_CrawlTimer = 0;
+      m_CrawlScroll = 0.0f;
+    }
+    if (m_Crawls[m_CurrentCrawl].scroll)
+      m_CrawlScroll += 2.0f;
   }
-  if (m_Crawls[m_CurrentCrawl].scroll)
-    m_CrawlScroll += 2.0f;
-}
-
-template <typename T>
-void Application::Advance(std::vector<T> &what, std::size_t &index)
-{
-  if (what.empty())
-    return;
-
-  index = (index + 1) % what.size();
 }
 
 void Application::Render()
 {
-  SDL_Rect clipRect{40, 20, static_cast<int>(m_Width - 80), static_cast<int>(m_Height - 40)};
-  SDL_FRect lineRect{0, static_cast<float>(m_Height - 100), static_cast<float>(m_Width), 2};
-
   Clear(m_BackgroundColor);
-  DrawRect(lineRect, m_TextColor);
+  DrawRect(m_LineRect, m_TextColor);
+  SDL_SetRenderClipRect(m_Renderer, &m_ClipRect);
 
-  SDL_SetRenderClipRect(m_Renderer, &clipRect);
-
+  if (m_ShowDateTime)
   {
-    std::string message;
-    switch (m_Slides[m_CurrentSlide].product)
-    {
-    case Product::CurrentConditions:
-      message = "Current Conditions";
-      break;
-    case Product::RegionalObservations:
-      message = "Regional Observations";
-      break;
-    case Product::Warning:
-      message = "Warning";
-      break;
-    }
-    DrawText(message, TextType::Small, m_Width / 2, clipRect.y, TextAlignment::Center);
+    DrawText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, m_ClipRect.x, m_LineRect.y + 4, TextAlignment::Left);
+    DrawText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, m_ClipRect.x + m_ClipRect.w, m_LineRect.y + 4, TextAlignment::Right);
   }
-
+  if (!m_Crawls.empty())
   {
-    std::string message;
-    switch (m_Slides[m_CurrentSlide].product)
-    {
-    case Product::CurrentConditions:
-      message = R"(
-Conditions at Tampa
-
-Temp: 59°F   Wind Chill: 50°F
-Humidity: 5%  Dewpoint: 20°F
-
-September Precipitation: 0.5 in
-)";
-      break;
-    case Product::RegionalObservations:
-      message = "Regional Observations Message";
-      break;
-    case Product::Warning:
-      message = m_WeatherData.warnings[0];
-      break;
-    }
-    DrawText(message, TextType::Normal, clipRect.x, clipRect.y + 30, TextAlignment::Left);
-  }
-
-  DrawText(std::format("{:%a %b %d}", m_RenderTime), TextType::Small, clipRect.x, lineRect.y + 3, TextAlignment::Left);
-  DrawText(std::format("{:%H:%M:%S %p}", m_RenderTime), TextType::Small, clipRect.x + clipRect.w, lineRect.y + 3, TextAlignment::Right);
-  {
-    float x = clipRect.x;
-    if (m_Crawls[m_CurrentCrawl].scroll)
+    Crawl crawl = m_Crawls[m_CurrentCrawl];
+    float x = m_ClipRect.x;
+    if (crawl.scroll)
       x = m_Width - m_CrawlScroll;
-    DrawText(m_Crawls[m_CurrentCrawl].text, TextType::Normal, x, lineRect.y + 28, TextAlignment::Left);
+    float y = m_LineRect.y + 10;
+    if (m_ShowDateTime)
+      y += 14;
+    DrawText(crawl.text, TextType::Normal, x, y, TextAlignment::Left);
   }
 
   SDL_SetRenderClipRect(m_Renderer, nullptr);
-
   SDL_RenderPresent(m_Renderer);
 }
 

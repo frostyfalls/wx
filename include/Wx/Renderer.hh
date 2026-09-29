@@ -57,29 +57,30 @@ public:
 
   void Present();
 
-  void Clear(Color color);
-  void DrawRect(Rect rect, Color color);
+  void Clear(const Color &color);
+  void DrawRect(const Rect &rect, const Color &color);
 
   Rect MeasureText(const std::string &text, TextType type);
-  Asset RasterizeText(const std::string &text, TextType type, Color color);
+  Asset RasterizeText(const std::string &text, TextType type, const Color &color);
 
   Asset &GetAsset(AssetId id) { return m_Assets[id]; }
-  void SetAsset(AssetId id, Asset asset) { m_Assets[id] = asset; }
-  void DrawAsset(AssetId, float x, float y, TextAlignment alignment);
+  void SetAsset(AssetId id, const Asset &asset) { m_Assets[id] = asset; }
+  void DrawAsset(AssetId id, float x, float y, TextAlignment alignment);
 
   void SetViewport(const Rect &rect);
   void ClearViewport();
 
-  std::int32_t Width() const { return m_Width; }
-  std::int32_t Height() const { return m_Height; }
-  void Resize(std::size_t width, std::size_t height) { m_Width = width, m_Height = height; }
+  int32_t Width() const { return m_Width; }
+  int32_t Height() const { return m_Height; }
+  void Resize(int32_t width, int32_t height) { m_Width = width, m_Height = height; }
   void SetFullscreen(bool enabled);
 
 private:
   Configuration m_Config;
-  std::int32_t m_Width = 0, m_Height = 0;
+  int32_t m_Width = 0;
+  int32_t m_Height = 0;
   std::map<AssetId, Asset> m_Assets;
-  std::size_t m_FontSize = 32;
+  size_t m_FontSize = 32;
 
   SDL_Window *m_Window = nullptr;
   SDL_Renderer *m_Renderer = nullptr;

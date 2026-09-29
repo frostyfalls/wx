@@ -99,7 +99,7 @@ void Renderer::SetFullscreen(bool enabled)
     SDL_SetWindowFullscreen(m_Window, 0);
 }
 
-void Renderer::Clear(Color color)
+void Renderer::Clear(const Color &color)
 {
   std::println("Clear();");
 
@@ -107,7 +107,7 @@ void Renderer::Clear(Color color)
   SDL_RenderClear(m_Renderer);
 }
 
-void Renderer::DrawRect(Rect rect, Color color)
+void Renderer::DrawRect(const Rect &rect, const Color &color)
 {
   std::println("DrawRect();");
 
@@ -128,7 +128,7 @@ void Renderer::DrawRect(Rect rect, Color color)
   }
 }
 
-Asset Renderer::RasterizeText(const std::string &text, TextType type, Color color)
+Asset Renderer::RasterizeText(const std::string &text, TextType type, const Color &color)
 {
   std::println("RasterizeText();");
 

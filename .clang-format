@@ -1,0 +1,9 @@
+---
+BracedInitializerIndentWidth: 2
+BreakBeforeBraces: Allman
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 0
+ConstructorInitializerIndentWidth: 2
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never

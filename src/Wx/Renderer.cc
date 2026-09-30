@@ -70,12 +70,12 @@ Rect Renderer::MeasureText(const std::string &text, TextType type)
 
   switch (type)
   {
-    case TextType::Normal:
-      font = m_Font;
-      break;
-    case TextType::Small:
-      font = m_SmallFont;
-      break;
+  case TextType::Normal:
+    font = m_Font;
+    break;
+  case TextType::Small:
+    font = m_SmallFont;
+    break;
   }
 
   TTF_GetStringSize(font, text.c_str(), 0, &r.width, &r.height);

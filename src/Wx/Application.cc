@@ -40,8 +40,7 @@ void Application::Run()
   while (m_Running)
   {
     m_CurrentTime = std::chrono::system_clock::now();
-    const float deltaSeconds = std::chrono::duration<float>
-      (m_CurrentTime - previousTime).count();
+    const float deltaSeconds = std::chrono::duration<float>(m_CurrentTime - previousTime).count();
     previousTime = m_CurrentTime;
 
     OnEvent();
@@ -108,19 +107,16 @@ void Application::OnUpdate(float deltaSeconds)
   if (m_ElapsedSecond >= 1.0f)
   {
     m_ElapsedSecond = 0.0f;
-    const auto localTime = std::chrono::time_point_cast<std::chrono::seconds>
-      (std::chrono::current_zone()->to_local(m_CurrentTime));
+    const auto localTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(m_CurrentTime));
     m_Renderer.SetAsset(
-      AssetId::Date,
-      m_Renderer.RasterizeText(std::format("{:%a %b %d}", localTime), TextType::Small, m_TextColor)
-    );
+        AssetId::Date,
+        m_Renderer.RasterizeText(std::format("{:%a %b %d}", localTime), TextType::Small, m_TextColor));
     std::string timeFmt = std::format("{:%I:%M:%S %p}", localTime);
     if (timeFmt.starts_with('0'))
       timeFmt.erase(0, 1);
     m_Renderer.SetAsset(
-      AssetId::Time,
-      m_Renderer.RasterizeText(timeFmt, TextType::Small, m_TextColor)
-    );
+        AssetId::Time,
+        m_Renderer.RasterizeText(timeFmt, TextType::Small, m_TextColor));
   }
 }
 

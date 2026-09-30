@@ -4,8 +4,8 @@
 
 #include <chrono>
 
-#include "Wx/Wx.hh"
 #include "Wx/Renderer.hh"
+#include "Wx/Wx.hh"
 
 namespace Wx
 {

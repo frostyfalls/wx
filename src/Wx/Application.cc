@@ -114,9 +114,12 @@ void Application::OnUpdate(float deltaSeconds)
       AssetId::Date,
       m_Renderer.RasterizeText(std::format("{:%a %b %d}", localTime), TextType::Small, m_TextColor)
     );
+    std::string timeFmt = std::format("{:%I:%M:%S %p}", localTime);
+    if (timeFmt.starts_with('0'))
+      timeFmt.erase(0, 1);
     m_Renderer.SetAsset(
       AssetId::Time,
-      m_Renderer.RasterizeText(std::format("{:%I:%M:%S %p}", localTime), TextType::Small, m_TextColor)
+      m_Renderer.RasterizeText(timeFmt, TextType::Small, m_TextColor)
     );
   }
 }

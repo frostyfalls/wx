@@ -156,6 +156,13 @@ Asset Renderer::RasterizeTextWrapped(const std::string &text, TextType type, con
   return asset;
 }
 
+void Renderer::SetAsset(AssetId id, const Asset &asset)
+{
+  if (m_Assets[id].texture != nullptr)
+    SDL_DestroyTexture(m_Assets[id].texture);
+  m_Assets[id] = asset;
+}
+
 void Renderer::DrawAsset(AssetId id, float x, float y, Alignment alignment, const DrawOptions &options)
 {
   Asset asset = m_Assets[id];

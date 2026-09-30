@@ -127,8 +127,6 @@ Asset Renderer::RasterizeText(const std::string &text, TextType type, const Colo
 
 Asset Renderer::RasterizeTextWrapped(const std::string &text, TextType type, const Color &color, size_t width)
 {
-  std::println("RasterizeText(\"{}\");", text);
-
   TTF_Font *font = nullptr;
   SDL_Surface *surface = nullptr;
   SDL_Texture *texture = nullptr;

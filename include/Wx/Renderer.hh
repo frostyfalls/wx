@@ -3,37 +3,22 @@
 #pragma once
 
 #include <map>
-
-#include "Wx/Wx.hh"
+#include <string>
 
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "Wx/Wx.hh"
+
 namespace Wx
 {
-
-struct Rect
-{
-  std::int32_t x, y, width, height;
-};
-
-struct Color
-{
-  std::uint8_t r, g, b, a;
-};
 
 enum class AssetId
 {
   Date,
   Time,
   Crawl,
-  Slide,
-};
-
-struct Asset
-{
-  SDL_Texture *texture = nullptr;
-  std::uint32_t width, height;
+  Product,
 };
 
 enum class TextType
@@ -42,11 +27,32 @@ enum class TextType
   Small,
 };
 
-enum class TextAlignment
+enum class Alignment
 {
   Left,
   Center,
   Right,
+};
+
+struct Rect
+{
+  int32_t x, y, width, height;
+};
+
+struct Color
+{
+  uint8_t r, g, b, a;
+};
+
+struct Asset
+{
+  uint32_t width, height;
+  SDL_Texture *texture = nullptr;
+};
+
+struct DrawOptions
+{
+  bool shadow = false;
 };
 
 class Renderer
@@ -62,11 +68,13 @@ public:
 
   Rect MeasureText(const std::string &text, TextType type);
   Asset RasterizeText(const std::string &text, TextType type, const Color &color);
+  Asset RasterizeTextWrapped(const std::string &text, TextType type, const Color &color, size_t width);
 
   Asset &GetAsset(AssetId id) { return m_Assets[id]; }
   void SetAsset(AssetId id, const Asset &asset) { m_Assets[id] = asset; }
-  void DrawAsset(AssetId id, float x, float y, TextAlignment alignment);
+  void DrawAsset(AssetId id, float x, float y, Alignment alignment, const DrawOptions &options);
 
+  Rect GetViewport();
   void SetViewport(const Rect &rect);
   void ClearViewport();
 
@@ -77,10 +85,10 @@ public:
 
 private:
   Configuration m_Config;
-  int32_t m_Width = 0;
-  int32_t m_Height = 0;
+  int32_t m_Width = 0, m_Height = 0;
   std::map<AssetId, Asset> m_Assets;
-  size_t m_FontSize = 32;
+  const size_t m_FontSize = 36;
+  const uint8_t m_ShadowOffset = 3;
 
   SDL_Window *m_Window = nullptr;
   SDL_Renderer *m_Renderer = nullptr;

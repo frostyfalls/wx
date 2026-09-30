@@ -29,6 +29,8 @@ Renderer::Renderer(const Configuration &config)
   m_Renderer = SDL_CreateRenderer(m_Window, nullptr);
 
   SDL_SetRenderVSync(m_Renderer, true);
+
+  Resize(m_Config.width, m_Config.height);
 }
 
 Renderer::~Renderer()
@@ -63,8 +65,6 @@ Renderer::~Renderer()
 
 Rect Renderer::MeasureText(const std::string &text, TextType type)
 {
-  std::println("MeasureText();");
-
   TTF_Font *font = nullptr;
   Rect r{0, 0, 0, 0};
 
@@ -84,15 +84,11 @@ Rect Renderer::MeasureText(const std::string &text, TextType type)
 
 void Renderer::Present()
 {
-  std::println("Present();");
-
   SDL_RenderPresent(m_Renderer);
 }
 
 void Renderer::SetFullscreen(bool enabled)
 {
-  std::println("SetFullscreen();");
-
   if (enabled)
     SDL_SetWindowFullscreen(m_Window, SDL_WINDOW_FULLSCREEN);
   else
@@ -101,16 +97,12 @@ void Renderer::SetFullscreen(bool enabled)
 
 void Renderer::Clear(const Color &color)
 {
-  std::println("Clear();");
-
   SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
   SDL_RenderClear(m_Renderer);
 }
 
 void Renderer::DrawRect(const Rect &rect, const Color &color)
 {
-  std::println("DrawRect();");
-
   SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
   if (rect.width == 0 || rect.height == 0)
   {
@@ -130,7 +122,12 @@ void Renderer::DrawRect(const Rect &rect, const Color &color)
 
 Asset Renderer::RasterizeText(const std::string &text, TextType type, const Color &color)
 {
-  std::println("RasterizeText();");
+  return RasterizeTextWrapped(text, type, color, 0);
+}
+
+Asset Renderer::RasterizeTextWrapped(const std::string &text, TextType type, const Color &color, size_t width)
+{
+  std::println("RasterizeText(\"{}\");", text);
 
   TTF_Font *font = nullptr;
   SDL_Surface *surface = nullptr;
@@ -148,7 +145,7 @@ Asset Renderer::RasterizeText(const std::string &text, TextType type, const Colo
     break;
   }
 
-  surface = TTF_RenderText_Solid_Wrapped(font, text.c_str(), 0, c, 0);
+  surface = TTF_RenderText_Solid_Wrapped(font, text.c_str(), 0, c, width);
   texture = SDL_CreateTextureFromSurface(m_Renderer, surface);
 
   asset.texture = texture;
@@ -159,27 +156,51 @@ Asset Renderer::RasterizeText(const std::string &text, TextType type, const Colo
   return asset;
 }
 
-void Renderer::DrawAsset(AssetId id, float x, float y, TextAlignment alignment)
+void Renderer::DrawAsset(AssetId id, float x, float y, Alignment alignment, const DrawOptions &options)
 {
-  std::println("DrawAsset();");
-
   Asset asset = m_Assets[id];
 
   SDL_FRect rect{x, y, static_cast<float>(asset.width), static_cast<float>(asset.height)};
 
   switch (alignment)
   {
-  case TextAlignment::Left:
+  case Alignment::Left:
     break;
-  case TextAlignment::Center:
+  case Alignment::Center:
     rect.x -= rect.w / 2.0f;
     break;
-  case TextAlignment::Right:
+  case Alignment::Right:
     rect.x -= rect.w;
     break;
   }
 
+  if (options.shadow)
+  {
+    // TODO(frosty): Implement public ColorMod and AlphaMod functions
+    Color c;
+    SDL_GetTextureColorMod(asset.texture, &c.r, &c.g, &c.b);
+    SDL_GetTextureAlphaMod(asset.texture, &c.a);
+
+    SDL_SetTextureColorMod(asset.texture, 0, 0, 0);
+    SDL_SetTextureAlphaMod(asset.texture, 128);
+    rect.x += m_ShadowOffset;
+    rect.y += m_ShadowOffset;
+
+    SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
+
+    SDL_SetTextureColorMod(asset.texture, c.r, c.g, c.b);
+    SDL_SetTextureAlphaMod(asset.texture, c.a);
+    rect.x -= m_ShadowOffset;
+    rect.y -= m_ShadowOffset;
+  }
   SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
+}
+
+Rect Renderer::GetViewport()
+{
+  SDL_Rect r;
+  SDL_GetRenderViewport(m_Renderer, &r);
+  return {r.x, r.y, r.w, r.h};
 }
 
 void Renderer::SetViewport(const Rect &rect)

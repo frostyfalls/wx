@@ -17,7 +17,7 @@ enum class AssetId
 {
   Date,
   Time,
-  Crawl,
+  Lower,
   Product,
 };
 
@@ -71,6 +71,7 @@ public:
   Asset RasterizeTextWrapped(const std::string &text, TextType type, const Color &color, size_t width);
 
   Asset &GetAsset(AssetId id) { return m_Assets[id]; }
+  // XXX(frosty): Updating an asset via a call like SetAsset(RasterizeText()) never frees the old SDL_Texture
   void SetAsset(AssetId id, const Asset &asset) { m_Assets[id] = asset; }
   void DrawAsset(AssetId id, float x, float y, Alignment alignment, const DrawOptions &options);
 

@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <format>
-#include <print>
 #include <string>
 
 #include <SDL3/SDL.h>
@@ -17,6 +16,16 @@ Application::Application(const Configuration &config)
   , m_Renderer(config)
 {
   AddProduct(Product::CurrentConditions);
+  AddLower(Lower::AdCrawl);
+  AddLower(Lower::Location);
+  AddLower(Lower::CurrentConditions);
+
+  // XXX(frosty): Is this a hacky way to initialize kicking off the loops?
+  m_CurrentProduct = m_Products.size() - 1;
+  m_CurrentLower = m_Lowers.size() - 1;
+
+  // TODO(frosty): Timed ad crawls that change when a certain time of day is hit
+  m_CurrentAdCrawl = "Orcanet - Reliable, affordable internet for the Tampa Bay area";
 
   m_DrawOptions.shadow = true;
   m_DateTimeHeight = m_Renderer.MeasureText("Mon", TextType::Small).height;
@@ -26,6 +35,8 @@ void Application::Run()
 {
   auto previousTime = std::chrono::system_clock::now();
 
+  NextProduct();
+  NextLower();
   while (m_Running)
   {
     m_CurrentTime = std::chrono::system_clock::now();
@@ -57,6 +68,9 @@ void Application::OnEvent()
       m_Renderer.SetFullscreen(m_Fullscreen);
     }
 
+    else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_S)
+      m_DrawOptions.shadow = !m_DrawOptions.shadow;
+
     else if (e.type == SDL_EVENT_KEY_DOWN && e.key.scancode == SDL_SCANCODE_C)
       m_ShowDateTime = !m_ShowDateTime;
 
@@ -65,10 +79,10 @@ void Application::OnEvent()
       m_Renderer.Resize(e.window.data1, e.window.data2);
 
       m_ProductViewport.width = m_Renderer.Width() - m_ProductViewport.x * 2;
-      m_ProductViewport.height = m_Renderer.Height() - m_ProductViewport.y - m_CrawlViewport.height;
+      m_ProductViewport.height = m_Renderer.Height() - m_ProductViewport.y - m_LowerViewport.height;
 
-      m_CrawlViewport.width = m_Renderer.Width() - m_CrawlViewport.x * 2;
-      m_CrawlViewport.y = m_Renderer.Height() - m_CrawlViewport.height;
+      m_LowerViewport.width = m_Renderer.Width() - m_LowerViewport.x * 2;
+      m_LowerViewport.y = m_Renderer.Height() - m_LowerViewport.height;
     }
   }
 }
@@ -77,10 +91,19 @@ void Application::OnUpdate(float deltaSeconds)
 {
   m_ElapsedSecond += deltaSeconds;
 
-  if (m_Renderer.Width() - m_CrawlOffset + m_Renderer.GetAsset(AssetId::Crawl).width < 0)
-    m_CrawlOffset = 0.0f;
+  if (CurrentLower() != Lower::AdCrawl)
+  {
+    m_LowerTime += deltaSeconds;
+    if (m_LowerTime >= 5)
+      NextLower();
+  }
   else
-    m_CrawlOffset += 2.0f;
+  {
+    if (m_LowerOffset + m_Renderer.GetAsset(AssetId::Lower).width < 0)
+      NextLower();
+    else
+      m_LowerOffset -= 2.0f;
+  }
 
   if (m_ElapsedSecond >= 1.0f)
   {
@@ -100,32 +123,81 @@ void Application::OnUpdate(float deltaSeconds)
 
 void Application::OnRender()
 {
-  if (m_Renderer.GetAsset(AssetId::Crawl).texture == nullptr)
-    m_Renderer.SetAsset(AssetId::Crawl, m_Renderer.RasterizeText("Orcanet - Affordable, reliable internet for the Tampa Bay area", TextType::Normal, m_TextColor));
-
-  if (m_Renderer.GetAsset(AssetId::Product).texture == nullptr)
-    m_Renderer.SetAsset(AssetId::Product, m_Renderer.RasterizeTextWrapped("Conditions at Tampa Bay\nFair / Windy\nTemp: 89°F   Wind Chill: 89°F", TextType::Normal, m_TextColor, m_Renderer.Width()));
-
   m_Renderer.Clear(m_BackgroundColor);
-  m_Renderer.DrawRect({0, m_CrawlViewport.y, m_Renderer.Width(), 1}, m_TextColor);
+  m_Renderer.DrawRect({0, m_LowerViewport.y, m_Renderer.Width(), 1}, m_TextColor);
 
   m_Renderer.SetViewport(m_ProductViewport);
   m_Renderer.DrawAsset(AssetId::Product, 0, 0, Alignment::Left, m_DrawOptions);
   m_Renderer.ClearViewport();
 
-  m_Renderer.SetViewport(m_CrawlViewport);
+  m_Renderer.SetViewport(m_LowerViewport);
   float crawlY = 5;
   if (m_ShowDateTime)
   {
     crawlY -= 3;
     m_Renderer.DrawAsset(AssetId::Date, 0, crawlY, Alignment::Left, m_DrawOptions);
-    m_Renderer.DrawAsset(AssetId::Time, m_CrawlViewport.width, crawlY, Alignment::Right, m_DrawOptions);
+    m_Renderer.DrawAsset(AssetId::Time, m_LowerViewport.width, crawlY, Alignment::Right, m_DrawOptions);
     crawlY += m_DateTimeHeight + 5;
   }
-  m_Renderer.DrawAsset(AssetId::Crawl, m_Renderer.Width() - m_CrawlOffset, crawlY, Alignment::Left, m_DrawOptions);
+  m_Renderer.DrawAsset(AssetId::Lower, m_LowerOffset, crawlY, Alignment::Left, m_DrawOptions);
   m_Renderer.ClearViewport();
 
   m_Renderer.Present();
+}
+
+void Application::NextProduct()
+{
+  if (m_Products.empty())
+    return;
+
+  m_CurrentProduct = (m_CurrentProduct + 1) % m_Products.size();
+
+  std::string text;
+  switch (CurrentProduct())
+  {
+  case Product::CurrentConditions:
+    text = "Conditions at Tampa Bay\nFair / Windy\nTemp: 89°F   Wind Chill: 89°F";
+    break;
+  }
+  m_Renderer.SetAsset(AssetId::Product, m_Renderer.RasterizeTextWrapped(text, TextType::Normal, m_TextColor, m_Renderer.Width()));
+}
+
+void Application::ClearProducts()
+{
+  m_Products.clear();
+  m_CurrentProduct = 0;
+}
+
+void Application::NextLower()
+{
+  if (m_Lowers.empty())
+    return;
+
+  m_CurrentLower = (m_CurrentLower + 1) % m_Lowers.size();
+  m_LowerOffset = 0;
+  m_LowerTime = 0;
+
+  std::string text;
+  switch (CurrentLower())
+  {
+  case Lower::Location:
+    text = "Conditions at Tampa Bay";
+    break;
+  case Lower::CurrentConditions:
+    text = "Fair / Windy";
+    break;
+  case Lower::AdCrawl:
+    text = m_CurrentAdCrawl;
+    m_LowerOffset = m_Renderer.Width();
+    break;
+  }
+  m_Renderer.SetAsset(AssetId::Lower, m_Renderer.RasterizeText(text, TextType::Normal, m_TextColor));
+}
+
+void Application::ClearLowers()
+{
+  m_Lowers.clear();
+  m_CurrentLower = 0;
 }
 
 } // namespace Wx

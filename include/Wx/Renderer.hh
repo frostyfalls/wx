@@ -88,7 +88,7 @@ private:
   Configuration m_Config;
   int32_t m_Width = 0, m_Height = 0;
   std::map<AssetId, Asset> m_Assets;
-  const size_t m_FontSize = 36;
+  const size_t m_FontSize = 32;
   const uint8_t m_ShadowOffset = 3;
 
   SDL_Window *m_Window = nullptr;

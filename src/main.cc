@@ -4,6 +4,6 @@
 
 int main()
 {
-  Wx::Application app({800, 600, "wx"});
+  Wx::Application app({640, 480, "wx"});
   app.Run();
 }

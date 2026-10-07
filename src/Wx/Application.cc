@@ -82,6 +82,7 @@ void Application::OnEvent()
 
       m_LowerViewport.width = m_Renderer.Width() - m_LowerViewport.x * 2;
       m_LowerViewport.y = m_Renderer.Height() - m_LowerViewport.height;
+      RenderProduct();
     }
   }
 }
@@ -108,15 +109,11 @@ void Application::OnUpdate(float deltaSeconds)
   {
     m_ElapsedSecond = 0.0f;
     const auto localTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(m_CurrentTime));
-    m_Renderer.SetAsset(
-        AssetId::Date,
-        m_Renderer.RasterizeText(std::format("{:%a %b %d}", localTime), TextType::Small, m_TextColor));
+    m_Renderer.SetAsset(AssetId::Date, m_Renderer.RasterizeText(std::format("{:%a %b %d}", localTime), TextType::Small, m_TextColor));
     std::string timeFmt = std::format("{:%I:%M:%S %p}", localTime);
     if (timeFmt.starts_with('0'))
       timeFmt.erase(0, 1);
-    m_Renderer.SetAsset(
-        AssetId::Time,
-        m_Renderer.RasterizeText(timeFmt, TextType::Small, m_TextColor));
+    m_Renderer.SetAsset(AssetId::Time, m_Renderer.RasterizeText(timeFmt, TextType::Small, m_TextColor));
   }
 }
 
@@ -126,14 +123,15 @@ void Application::OnRender()
   m_Renderer.DrawRect({0, m_LowerViewport.y, m_Renderer.Width(), 1}, m_TextColor);
 
   m_Renderer.SetViewport(m_ProductViewport);
-  m_Renderer.DrawAsset(AssetId::Product, 0, 0, Alignment::Left, m_DrawOptions);
+  m_Renderer.DrawAsset(AssetId::ProductTitle, m_ProductViewport.width / 2, 0, Alignment::Center, m_DrawOptions);
+  m_Renderer.DrawAsset(AssetId::ProductBody, 0, m_ProductTitleHeight, Alignment::Left, m_DrawOptions);
   m_Renderer.ClearViewport();
 
   m_Renderer.SetViewport(m_LowerViewport);
   float crawlY = 5;
   if (m_ShowDateTime)
   {
-    crawlY -= 3;
+    crawlY = 2;
     m_Renderer.DrawAsset(AssetId::Date, 0, crawlY, Alignment::Left, m_DrawOptions);
     m_Renderer.DrawAsset(AssetId::Time, m_LowerViewport.width, crawlY, Alignment::Right, m_DrawOptions);
     crawlY += m_DateTimeHeight + 5;
@@ -151,14 +149,23 @@ void Application::NextProduct()
 
   m_CurrentProduct = (m_CurrentProduct + 1) % m_Products.size();
 
-  std::string text;
+  RenderProduct();
+}
+
+void Application::RenderProduct()
+{
+  TextType titleType = TextType::Small;
+  std::string productTitle, productBody;
   switch (CurrentProduct())
   {
   case Product::CurrentConditions:
-    text = "Conditions at Tampa Bay\nFair / Windy\nTemp: 89°F   Wind Chill: 89°F";
+    productTitle = "Nat'l Weather Service Forecast";
+    productBody = "Tonight...Drizzle and fog with a 90 percent chance of rain. High 70 to 75.";
     break;
   }
-  m_Renderer.SetAsset(AssetId::Product, m_Renderer.RasterizeTextWrapped(text, TextType::Normal, m_TextColor, m_Renderer.Width()));
+  m_Renderer.SetAsset(AssetId::ProductTitle, m_Renderer.RasterizeText(productTitle, titleType, m_TextColor));
+  m_Renderer.SetAsset(AssetId::ProductBody, m_Renderer.RasterizeTextWrapped(productBody, TextType::Normal, m_TextColor, m_ProductViewport.width));
+  m_ProductTitleHeight = m_Renderer.MeasureText(productTitle, titleType).height + m_ProductViewport.y;
 }
 
 void Application::ClearProducts()

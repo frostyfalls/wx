@@ -18,7 +18,8 @@ enum class AssetId
   Date,
   Time,
   Lower,
-  Product,
+  ProductTitle,
+  ProductBody,
 };
 
 enum class TextType
@@ -36,17 +37,24 @@ enum class Alignment
 
 struct Rect
 {
-  int32_t x, y, width, height;
+  int32_t x = 0;
+  int32_t y = 0;
+  int32_t width = 0;
+  int32_t height = 0;
 };
 
 struct Color
 {
-  uint8_t r, g, b, a;
+  uint8_t r = 0;
+  uint8_t g = 0;
+  uint8_t b = 0;
+  uint8_t a = 0;
 };
 
 struct Asset
 {
-  uint32_t width, height;
+  uint32_t width = 0;
+  uint32_t height = 0;
   SDL_Texture *texture = nullptr;
 };
 

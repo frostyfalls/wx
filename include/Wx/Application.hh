@@ -38,6 +38,7 @@ private:
   void AddProduct(const Product &product) { m_Products.push_back(product); }
   Product &CurrentProduct() { return m_Products[m_CurrentProduct]; }
   void NextProduct();
+  void RenderProduct();
   void ClearProducts();
 
   void AddLower(const Lower &product) { m_Lowers.push_back(product); }
@@ -51,7 +52,7 @@ private:
 
   Color m_BackgroundColor{53, 4, 121, 0};
   Color m_TextColor{238, 238, 238, 0};
-  Rect m_ProductViewport{40, 40, 0, 0};
+  Rect m_ProductViewport{40, 30, 0, 0};
   Rect m_LowerViewport{40, 0, 0, 100};
 
   std::vector<Product> m_Products;
@@ -69,6 +70,7 @@ private:
   float m_ElapsedSecond = 1.0f;
   float m_LowerOffset = 0.0f;
   float m_DateTimeHeight = 0.0f;
+  float m_ProductTitleHeight = 0.0f;
   std::chrono::time_point<std::chrono::system_clock> m_CurrentTime;
   DrawOptions m_DrawOptions;
 };

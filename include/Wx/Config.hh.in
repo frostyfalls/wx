@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#pragma once
+#ifndef WX_CONFIG_HH
+#define WX_CONFIG_HH
 
 #include <string_view>
 
@@ -10,3 +11,5 @@ namespace Wx
 constexpr std::string_view VERSION = @WX_VERSION@;
 
 } // namespace Wx
+
+#endif // WX_CONFIG_HH

@@ -1,9 +1,10 @@
 ---
-BracedInitializerIndentWidth: 2
-BreakBeforeBraces: Allman
+AccessModifierOffset: -4
+BracedInitializerIndentWidth: 4
+BreakBeforeBraces: Mozilla
 BreakConstructorInitializers: BeforeComma
 ColumnLimit: 0
-ConstructorInitializerIndentWidth: 2
-IndentWidth: 2
-TabWidth: 2
+ConstructorInitializerIndentWidth: 4
+IndentWidth: 4
+TabWidth: 4
 UseTab: Never

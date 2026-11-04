@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#pragma once
+#ifndef WX_HH
+#define WX_HH
 
-#include <cstdint>
 #include <string>
 
 #include "Wx/Config.hh"
 
-namespace Wx
-{
+namespace Wx {
 
 struct Configuration
 {
-  std::size_t width, height;
-  const std::string title;
+    size_t width, height;
+    const std::string title;
 };
 
 } // namespace Wx
+
+#endif // WX_HH

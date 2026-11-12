@@ -16,9 +16,11 @@ configuration.set_quoted('WX_VERSION', meson.project_version())
 
 sdl3_dep = dependency('sdl3')
 sdl3_ttf_dep = dependency('sdl3-ttf')
+curl_dep = dependency('libcurl')
+cjson_dep = dependency('libcjson')
 
 sources = []
-dependencies = [sdl3_dep, sdl3_ttf_dep]
+dependencies = [sdl3_dep, sdl3_ttf_dep, curl_dep, cjson_dep]
 include = include_directories('include')
 
 subdir('include')

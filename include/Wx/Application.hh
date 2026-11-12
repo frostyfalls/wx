@@ -60,8 +60,8 @@ private:
     Color m_TextColor{238, 238, 238, 0};
     Color m_BulletinColor{136, 52, 7, 0};
     Color m_GreenColor{0, 200, 0, 0};
-    Rect m_ProductViewport{40, 30, 0, 0};
-    Rect m_LowerViewport{40, 0, 0, 100};
+    Rect m_ProductViewport{50, 40, 0, 0};
+    Rect m_LowerViewport{50, 0, 0, 90};
 
     std::vector<Product> m_Products;
     size_t m_CurrentProduct = 0;

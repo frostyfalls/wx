@@ -91,7 +91,6 @@ private:
     int32_t m_Width = 0, m_Height = 0;
     std::map<AssetId, Asset> m_Assets;
     const size_t m_FontSize = 32;
-    const uint8_t m_ShadowOffset = 2;
     bool m_Fullscreen = false;
 
     SDL_Window *m_Window = nullptr;

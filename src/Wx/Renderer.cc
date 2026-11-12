@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include <cmath>
-#include <iostream>
 #include <print>
 
 #include "Wx/Renderer.hh"
@@ -183,8 +182,7 @@ void Renderer::DrawAsset(AssetId id, float x, float y, Alignment alignment, cons
         Color c;
         SDL_GetTextureColorMod(asset.texture, &c.r, &c.g, &c.b);
         SDL_GetTextureAlphaMod(asset.texture, &c.a);
-
-        SDL_SetTextureColorMod(asset.texture, 20, 20, 20);
+        SDL_SetTextureColorMod(asset.texture, 24, 24, 24);
         SDL_SetTextureAlphaMod(asset.texture, 255);
         rect.x -= 1;
         rect.y -= 1;
@@ -194,16 +192,17 @@ void Renderer::DrawAsset(AssetId id, float x, float y, Alignment alignment, cons
         rect.x -= 2;
         rect.y += 2;
         SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
-        rect.x += 1;
-        rect.y -= 1;
-        rect.x += m_ShadowOffset;
-        rect.y += m_ShadowOffset;
+        rect.x += 2;
         SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
-
+        rect.x -= 1;
+        rect.y -= 1;
+        rect.x += 3;
+        rect.y += 3;
+        SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
         SDL_SetTextureColorMod(asset.texture, c.r, c.g, c.b);
         SDL_SetTextureAlphaMod(asset.texture, c.a);
-        rect.x -= m_ShadowOffset;
-        rect.y -= m_ShadowOffset;
+        rect.x -= 3;
+        rect.y -= 3;
     }
     SDL_RenderTexture(m_Renderer, asset.texture, nullptr, &rect);
 }

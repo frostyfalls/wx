@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <ranges>
+#include <format>
 #include <string>
 
 #include <SDL3/SDL.h>
@@ -20,9 +21,9 @@ Application::Application(const Configuration &config)
     AddLower(Lower::CurrentConditions);
     AddLower(Lower::Crawl);
 
-    AddCrawl(900, "Orcanet - Reliable, affordable cable internet and television for the Tampa Bay area... Visit us at orcanet.sh for a quick service installation today!");
-    AddCrawl(935, "voidlinux.org - a small, adaptable Linux distribution fit for all needs");
-    AddCrawl(937, "Need a robust private phone service for your small business? Reach out to Frosty's Home Lab at frostyshomelab.net to get your business running in no time...");
+    AddCrawl(300, "voidlinux.org - a small, adaptable Linux distribution fit for all needs");
+    AddCrawl(0, "Need a robust private phone service for your small business? Reach out to Frosty's Home Lab at frostyshomelab.net to get your business running in no time...");
+    AddCrawl(600, "Orcanet - Reliable, affordable cable internet and television for the Tampa Bay area... Visit us at orcanet.sh for a quick service installation today!");
 
     // XXX(frosty): Is this a hacky way to initialize kicking off the loops?
     m_CurrentProduct = m_Products.size() - 1;
@@ -119,7 +120,7 @@ void Application::OnRender()
 {
     bool isCrawl = CurrentLower() == Lower::Crawl;
     bool isBulletin = CurrentProduct() == Product::Bulletin;
-    uint32_t lowerY = 3;
+    uint32_t lowerY = 4;
     Color color = m_GreenMode ? m_GreenColor : m_BackgroundColor;
 
     m_Renderer.Clear(color);
@@ -139,7 +140,8 @@ void Application::OnRender()
     if (!isCrawl) {
         m_Renderer.DrawAsset(AssetId::Date, 0, lowerY, Alignment::Left, m_DrawOptions);
         m_Renderer.DrawAsset(AssetId::Time, m_LowerViewport.width, lowerY, Alignment::Right, m_DrawOptions);
-        lowerY += 3 + m_Renderer.MeasureText("Mon", TextType::Small).height;
+        lowerY *= 2;
+        lowerY += m_Renderer.MeasureText("Mon", TextType::Small).height;
     }
     m_Renderer.DrawAsset(AssetId::Lower, m_LowerOffset, lowerY, Alignment::Left, m_DrawOptions);
 
@@ -166,14 +168,14 @@ void Application::RenderProduct()
     std::string productTitle, productBody;
     switch (CurrentProduct()) {
     case Product::CurrentConditions:
-        productBody = "Conditions at Tampa Bay\nScattered Showers\nTemp: 89°F\nNovember Precipitation: 2.05 in";
+        productBody = "Conditions at Tampa Bay\nFair / Windy\nTemp: 89°F";
         break;
     case Product::NWSForecast:
         productTitle = "Nat'l Weather Service Forecast";
         productBody = "Tonight...Drizzle and fog with a 90 percent chance of rain. High 70 to 75.";
         break;
     case Product::Bulletin:
-        productBody = "No warnings currently";
+        productBody = "this is some long warning bulletin text to show it's scrolling\n\nbla bla yayaya\nMERRY CHRISTMAS 2026";
         break;
     }
     if (productTitle.size() > 0) {
